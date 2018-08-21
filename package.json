@@ -1,0 +1,17 @@
+{
+  "name": "automation",
+  "version": "1.0.0",
+  "dependencies": {
+    "chromedriver": "^2.40.0",
+    "iedriver": "^3.9.2",
+    "selenium-webdriver": "^4.0.0-alpha.1"
+  },
+  "description": "automation",
+  "main": "automation.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

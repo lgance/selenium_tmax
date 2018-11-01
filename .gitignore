@@ -1,0 +1,16 @@
+## TOP QA Ignore File ##
+
+*.log
+*.bak
+
+##  npm Modules
+
+node_modules/
+package-lock.json
+
+
+## test code with test report
+test.js
+chromeBuilding/
+ieBuilding/
+firefoxBuilding/

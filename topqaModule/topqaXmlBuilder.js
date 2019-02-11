@@ -24,7 +24,7 @@ function makeDir(path){
 }
 //  write file junit-testCase.xml 
 function makeJunitReportFile(xmlContent,path,testCase){
-    console.log(testCase);
+    // console.log(testCase); // 2018-11-23 잠시 막음
     let fd = fs.openSync(path+'/junit-'+testCase+'.xml','w');
     fs.writeFileSync(fd,xmlContent,{encoding:"utf-8"});
 }
@@ -42,7 +42,8 @@ function makeJunitReport(testResultArray){
     const array = _isArray(testResultArray);
     if(array===false){return;}
 
-    console.log(array);
+    
+    // console.log(array); 2018-11-23 잠시 막음 
     // // File Write for junit-*.xml
     const dirPath = path.join(__dirname,'../chromeBuilding');
     !fs.existsSync(dirPath) ? makeDir(dirPath) : console.log('폴더 미생성');

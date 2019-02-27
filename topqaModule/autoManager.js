@@ -18,19 +18,11 @@
     args로 해결 
  */
 let singleton;
-
 require('chromedriver');
 require('iedriver');
-
-
 const webdriver = require('selenium-webdriver');
 const{ By, until,actions } = webdriver;
 const { makeJunitReport } = require('./topqaXmlBuilder');
-
-
-// chrome = require('selenium-webdriver/chrome');
-// var path = require('chromedriver').path;
-
 
 // no param -> default 'chrome';
 // param -> not 'c
@@ -41,7 +33,6 @@ const targetBrowser = !process.argv[2]
     : 'chrome');
 // module exports and topqa 
 module.exports = topqa;
-
 
 // lazy loading
 // module.exports = () => singleton || (singleton = new topqa());
@@ -61,7 +52,9 @@ function topqa(){
 
     // 현재 페이지가 없으면 안됨;
     this.currTestPage;
+    // topLNB Menu
 
+    this.lnbMenuRoot;
     // 1 depth Web Element with Text
     this.currlnbMenu;
     this.currlnbMenuText;
@@ -75,20 +68,21 @@ function topqa(){
     this.currentTestWidget ;
 
     /** basic loading */
-    // 시연 url
-    
 
-    this._url = "http://localhost:5279/topqa/index.html";
+    // 시연 url
+    // this._url = "http://localhost:5279/topqa/index.html";
+
+    // tableview test  Session Created Error 
+    this._url = 'http://127.0.0.1:5279/topqa/index.html#!/automation';
+
 
 };
 topqa.prototype.reset = function(){
     this.currlnbMenu ='';
     this.currlnbMenuText='';
-    
     this.currlnbSubMenu ='';
     this.currlnbSubMenuText='';
-
-    this.currentTestWidget='';
+   this.currentTestWidget='';
 };
 topqa.prototype.test = async function(){
    
@@ -142,30 +136,141 @@ console.log('Chrome Start');
     catch(err){
             console.error('driver init Error');
             console.error(err);
-    }
-    finally{
-        console.log("driver execute Success");
-        // await this.driver.sleep(2000);
-        // 실수로quit해버리니까 session 에러가 남.. 
-        // await this.driver.quit();
+            return false;
     }
 };
+
+/**
+ * @param menuText 'String or Array'
+ * @param menuDepth
+ * @public
+ */
+topqa.prototype.lnbOpen = async function(menuText){
+        try{
+            if(!this.lnbMenuRoot)
+                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',5000);
+            else{
+                console.log('Exist lnbMenu Root');
+            }
+            let cssSelector = '.top-menu-root .top-menu_nav li.depth';
+            let flag = true;
+            if(flag){
+                   if(Array.isArray(menuText)){
+                     for(let i=0;i<menuText.length;i++){
+                        // get Selected li Tags
+                        let li_selectIterator = cssSelector.concat((i+1));
+                        // selected Menu Text
+                        let clickMenuText = menuText[i];
+                        // Current Depth ( i + 1 )
+                        let li_menuArray = await this.driver.findElements(By.css(li_selectIterator));
+                        // li Tags Until Waiting
+                        this.driver.wait(until.elementsLocated(li_menuArray));
+
+                        for(let j=0;j<li_menuArray;j++){
+                            
+                            let findTextElement = By.css('.top-menu_text');
+                            this.driver.wait(until.elementLocated(findTextElement));
+
+                            let textElement = await li_menuArray[i].findElement(findTextElement);  
+                            this.driver.wait(until.elementLocated(textElement));
+
+                            let currentText = await textElement.getText();
+                            if(currentText===clickMenuText){
+                                let clickEventTags = By.css('a');
+
+
+                                let clickTarget = await li_menuArray[i].findElement(By.css('a'));
+                                this.driver.wait(until.elementLocated(clickTarget));
+
+                            }
+
+                        }
+
+                     }
+                   }// is not Array
+                   else{
+
+
+
+
+
+
+                   }
+            }
+            else{
+                    if(Array.isArray(menuText)){
+                        menuText.reduce(async (prev,curr,index,arr) => {
+                            const nextItem = await prev;
+                            let selector = cssSelector.concat(index+1);
+                            let menuArray = await this.driver.findElements(By.css(selector));
+
+                            for (let i=0;i<menuArray.length;i++){
+                                let textElement = await menuArray[i].findElement(By.css('.top-menu_text'));
+                                let _targetText = await textElement.getText();
+
+                                console.log('호이호이호이' , _targetText);
+                                if(_targetText===curr){
+                                    console.log('Menu Check  -> ',curr);
+                                    await this.driver.wait(until.elementIsVisible(menuArray[i]),5000).click();
+                                    // await menuArray[i].click();
+                                    break;
+                                }
+                            }
+                            return nextItem;
+                        },Promise.resolve());
+                    }
+                    else{
+                            
+                        let selector = cssSelector.concat(menuDepth);
+                        let menuArray = await this.driver.findElements(By.css(selector));            
+                    
+                        for (let i=0;i<menuArray.length;i++){
+                            
+                            let textElement = await menuArray[i].findElement(By.css('.top-menu_text'));
+                            this.driver.wait(until.textElement)
+                            let _targetText = await textElement.getText();
+
+                            console.log('호이호이호이' , _targetText);
+                            if(_targetText===menuText){
+                                console.log('Menu Check  -> ',menuText);
+                                await this.driver.wait(until.elementIsVisible(menuArray[i]),5000).click();
+                                // await menuArray[i].click();
+                                break;
+                            }
+                        }
+                    }
+            }
+        }
+        catch(err){
+            console.error(err);
+        }
+}
+topqa.prototype.searchMenuClick = async function(webElement){
+    try{
+
+    }
+    catch(err){console.log(err);}
+}
 topqa.prototype.quit = async function(){
-    await this.driver.sleep(3000);
-    await this.driver.close();
-    
-    await this.driver.quit();
+    try{
+        await this.driver.sleep(3000);
+        await this.driver.close();
+        await this.driver.quit();
+    }
+    catch(err){
+        console.error(err);
+    }
 };
 topqa.prototype.isIE = function(){
     return targetBrowser==='ie' ? true : false;
 };
 // subMenu Click after lnbMenu click 
-topqa.prototype.subMenuSelect = async function(clickSubMenuText){
+topqa.prototype.lnbsubMenuSelect = async function(clickSubMenuText){
     try{
         // not select lnbMenu 
         if(this.currlnbMenu===undefined || !this.currlnbMenu === true){
-                console.log("lnbMenu 를 선택해주세요");
-                endFunction("prototype.subMenuSelect currlnbMenu is not exist");
+                console.log("lnbsubMenu 를 선택해주세요");
+                endFunction("prototype.lnbsubMenuSelect currlnbMenu is not exist");
                 return false;
         }
         console.warn(await this.currlnbMenuText,"의 하위 메뉴 인 ",clickSubMenuText ,"선택됨");
@@ -185,8 +290,8 @@ topqa.prototype.subMenuSelect = async function(clickSubMenuText){
                         break;
                     }
                     else{
-                        console.log("[subMenuSelect] Looking for element : " ,clickSubMenuText );
-                        console.log("[subMenuSelect] Checking for element : " ,targetText );
+                        console.log("[lnbsubMenuSelect] Looking for element : " ,clickSubMenuText );
+                        console.log("[lnbsubMenuSelect] Checking for element : " ,targetText );
                         console.log('');
                     }
             }
@@ -209,34 +314,28 @@ topqa.prototype.subMenuSelect = async function(clickSubMenuText){
                 }
                 
             }
-            // await Promise.all(subMenuList.map(async (item,index)=>{
-            //     let topSubMenuTextTag = await item.findElement(By.css('.top-menu_text'));
-            //     let targetText = await topSubMenuTextTag.getText();
-            //         if(clickSubMenuText.toLowerCase()===targetText.toLowerCase()){
-            //             console.log("find It");
-            //                 this.currlnbSubMenu = item;
-            //                 this.currlnbSubMenuText = targetText;
-            //                 await topSubMenuTextTag.click();
-            //                 return item;
-            //         }
-            //         else{
-            //                 console.log("[subMenuSelect] Looking for element : " ,clickSubMenuText );
-            //                 console.log("[subMenuSelect] Checking for element : " ,targetText );
-            //                 console.log('');
-            //         }
-            // }));
+          
         }
     
     }
     catch(err){
-    console.log("subMenuSelect : ", err);
+    console.log("lnbsubMenuSelect : ", err);
         return false;
     }
     finally{
 
-        endFunction("prototype.subMenuSelect");
+        endFunction("prototype.lnbsubMenuSelect");
     }
 };
+
+// TOP Main Pages 
+// lnb Menu Control API
+/**
+ *  @param {lnbMenuText} 
+ *  @public 
+ */
+// naming based click 
+
 
 topqa.prototype.lnbMenuSelect = async function(lnbMenuText){
     try{
@@ -427,16 +526,12 @@ topqa.prototype.tableViewRowClick = async function(_id,_columnIndex,_rowIndex,_c
         }
 };
 /**
- * 
+ *  is Postponed
  */
 topqa.prototype.regressionListViewIteratorClick = async function(){
-        // top-listview#imsListView .top-listview-root
-        // document.querySelector("top-listview#imsListView .top-listview-root");
     try{
-        let imsListView = await this.isDisplayDOM('',4000,'top-listview#imsListView .top-listview-root');
-
+        let imsListView = await this.isDisplayDOM('top-listview#imsListView .top-listview-root',4000);
         console.warn('regressionListViewIteratorClick target');
-
     }catch(err){
        console.log("[regressionListViewIteratorClick] : ",err);
     }finally{
@@ -444,57 +539,33 @@ topqa.prototype.regressionListViewIteratorClick = async function(){
     }
 };
 
-// {id:'',wait:'',cssSelector:''}
-topqa.prototype.isDisplayDOM = async function(idSelector,waitTime,cssSelector){
-    let maxWaitTime = waitTime || 3000;
+topqa.prototype.cssDisplay = async function(selector,waitTime){
+    let maxWaitTime = waitTime || 2000;
     try{
-        // let target = await this.driver.findElement(By.id(targetId));
-    let target;
-      if(!!cssSelector){
-        target = await this.driver.wait(until.elementLocated(By.css(cssSelector)),maxWaitTime);
-        console.warn('css Selected DOM is ',target);
-
-        console.warn('content',await target.getTagName());
+        let target;
+        target = await this.driver.wait(until.elementLocated(By.css(selector)),maxWaitTime);
         return await target;
-      } // !!cssSelector
-      else{
-        target = await this.driver.wait(until.elementLocated(By.id(idSelector)),maxWaitTime);
-        if(idSelector === await target.getAttribute('id')){
-            console.log("id Selected DOM is : ",idSelector);
-            return await target;
-        }
-        else{
-            return false;
-        }
-      } // else
     }   
     catch(err){
-             console.warn("isDisplayDOM Error  : ",idSelector , " or " , cssSelector);
-             console.error(err);
-             return false;
+        console.warn("cssDisplay Error  : ",selector);
+        console.error(err);
+        return false;
     }
-}; // isDisplayDOM3
-
-topqa.prototype.automationTestPageClose = async function(targetId){
-
 };
-
-
-
-
-topqa.prototype.testSubmit = async function(){
-    
+// Top.js is ID Based Element 
+topqa.prototype.isDisplayDOM = async function(selector,waitTime){
+    let maxWaitTime = waitTime || 3000;
     try{
-        let target =  await this.driver.findElement(By.id('addTestRepoButton'));
-        let innerBtn = await target.findElement(By.css('.top-button-root'));
-
-        await target.click();
-        await innerBtn.click();
-    }
+        let target;
+        target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
+        return await target;
+    }   
     catch(err){
-        console.log(err);
+        console.warn("isDisplayDOM Error  : ",selector);
+        console.error(err);
+        return false;
     }
-};
+}; // isDisplayDOM
 
 
 topqa.prototype.userWait = async function(waitTime){
@@ -504,26 +575,6 @@ topqa.prototype.userWait = async function(waitTime){
     catch(err){console.warn(err);}
 }
 
-
-// Down Load Button Click (E2E Test Page -> End Point)
-topqa.prototype.testReport = async function(){
-    try{
-        // 임시 wait
-        await this.driver.sleep(1500);
-
-        let downBtn = await this.driver.findElement(By.id('downloadBtn'));
-        if(!downBtn){throw new Error('Download Button not Display')}
-       await downBtn.click();
-
-       let array = [];
-       const retVal = await this.driver.executeScript('return factory.report()');
-       makeJunitReport(retVal);
-
-    }
-    catch(err){
-        console.log(err);
-    }
-};
 
 // temp remove
 topqa.prototype.createJunitReport = async function(){
@@ -537,13 +588,48 @@ topqa.prototype.createJunitReport = async function(){
     }
 }
 
+topqa.prototype.__log = function(error){
+    // Access.log 
+    console.log(error);
+};
+
+
+
+
 
 function endFunction(message){
     console.log("--------------------------------[",message,"] >>>>>> End");
 };
 
+// deprecated 
+topqa.prototype.testReport = async function(){
+    try{
+        // 임시 wait
+        await this.driver.sleep(1500);
+
+       let downBtn = await this.driver.findElement(By.id('downloadBtn'));
+       if(!downBtn){throw new Error('Download Button not Display')}
+       await downBtn.click();
+
+       let array = [];
+       const retVal = await this.driver.executeScript('return factory.report()');
+       makeJunitReport(retVal);
+    }
+    catch(err){
+        console.log(err);
+    }
+};
 
 
-// let thead = await retTarget.findElement(By.css('table > thead'));
-// let arr = await thead.findElements(By.css('th.head-cell'));
-// console.log(await retTarget.getAttribute('tagName'));
+// is Deprecated 
+topqa.prototype.testSubmit = async function(){
+    try{
+        let target =  await this.driver.findElement(By.id('addTestRepoButton'));
+        let innerBtn = await target.findElement(By.css('.top-button-root'));
+        await target.click();
+        await innerBtn.click();
+    }
+    catch(err){
+        console.log(err);
+    }
+};

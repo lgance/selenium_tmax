@@ -21,7 +21,14 @@ let singleton;
 require('chromedriver');
 require('iedriver');
 const webdriver = require('selenium-webdriver');
-const{ By, until,actions } = webdriver;
+const {Key, Origin, Button} = require('selenium-webdriver/lib/input');
+const{ By, until, actions } = webdriver;
+
+// Key,
+// Keyboard,
+// FileDetector,
+// Origin,
+
 const { makeJunitReport } = require('./topqaXmlBuilder');
 
 // no param -> default 'chrome';
@@ -50,6 +57,9 @@ function topqa(){
     // 파라미터에 맞게 빌드된 드라이버
     this.driver;
 
+    // External driver Instance
+    this.driverInstance = undefined;
+
     // 현재 페이지가 없으면 안됨;
     this.currTestPage;
     // topLNB Menu
@@ -70,10 +80,14 @@ function topqa(){
     /** basic loading */
 
     // 시연 url
-    // this._url = "http://localhost:5279/topqa/index.html";
+
+    
 
     // tableview test  Session Created Error 
     this._url = 'http://127.0.0.1:5279/topqa/index.html#!/automation';
+
+    
+
 
 
 };
@@ -82,7 +96,7 @@ topqa.prototype.reset = function(){
     this.currlnbMenuText='';
     this.currlnbSubMenu ='';
     this.currlnbSubMenuText='';
-   this.currentTestWidget='';
+    this.currentTestWidget='';
 };
 topqa.prototype.test = async function(){
    
@@ -139,7 +153,9 @@ console.log('Chrome Start');
             return false;
     }
 };
-
+topqa.prototype.getDriver = function(){
+    return  typeof this.driverInstance ==='undefined' ? this.driver : false;
+};
 /**
  * @param menuText 'String or Array'
  * @param menuDepth
@@ -153,103 +169,56 @@ topqa.prototype.lnbOpen = async function(menuText){
                 console.log('Exist lnbMenu Root');
             }
             let cssSelector = '.top-menu-root .top-menu_nav li.depth';
-            let flag = true;
-            if(flag){
-                   if(Array.isArray(menuText)){
+            if(Array.isArray(menuText)){
                      for(let i=0;i<menuText.length;i++){
-                        // get Selected li Tags
-                        let li_selectIterator = cssSelector.concat((i+1));
-                        // selected Menu Text
-                        let clickMenuText = menuText[i];
-                        // Current Depth ( i + 1 )
-                        let li_menuArray = await this.driver.findElements(By.css(li_selectIterator));
-                        // li Tags Until Waiting
-                        this.driver.wait(until.elementsLocated(li_menuArray));
+                        // 메뉴 리턴 선택자
+                        let li_selectIterator = `.top-menu-root .top-menu_nav li.depth${i+1}`;
+                        // serach Menu Text
+                        let searchMenuText = menuText[i];
+                        let li_menuArray = await this.lnbMenuRoot.findElements(By.css(li_selectIterator));
 
-                        for(let j=0;j<li_menuArray;j++){
-                            
-                            let findTextElement = By.css('.top-menu_text');
-                            this.driver.wait(until.elementLocated(findTextElement));
-
-                            let textElement = await li_menuArray[i].findElement(findTextElement);  
-                            this.driver.wait(until.elementLocated(textElement));
-
+                        for(let j=0;j<li_menuArray.length;j++){
+                            let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
                             let currentText = await textElement.getText();
-                            if(currentText===clickMenuText){
-                                let clickEventTags = By.css('a');
-
-
-                                let clickTarget = await li_menuArray[i].findElement(By.css('a'));
-                                this.driver.wait(until.elementLocated(clickTarget));
-
+                            
+                            if(currentText===searchMenuText){
+                               let clickTarget = await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'));
+                               await clickTarget.click();
                             }
-
                         }
-
                      }
-                   }// is not Array
-                   else{
-
-
-
-
-
-
-                   }
-            }
-            else{
-                    if(Array.isArray(menuText)){
-                        menuText.reduce(async (prev,curr,index,arr) => {
-                            const nextItem = await prev;
-                            let selector = cssSelector.concat(index+1);
-                            let menuArray = await this.driver.findElements(By.css(selector));
-
-                            for (let i=0;i<menuArray.length;i++){
-                                let textElement = await menuArray[i].findElement(By.css('.top-menu_text'));
-                                let _targetText = await textElement.getText();
-
-                                console.log('호이호이호이' , _targetText);
-                                if(_targetText===curr){
-                                    console.log('Menu Check  -> ',curr);
-                                    await this.driver.wait(until.elementIsVisible(menuArray[i]),5000).click();
-                                    // await menuArray[i].click();
-                                    break;
-                                }
-                            }
-                            return nextItem;
-                        },Promise.resolve());
-                    }
-                    else{
-                            
-                        let selector = cssSelector.concat(menuDepth);
-                        let menuArray = await this.driver.findElements(By.css(selector));            
-                    
-                        for (let i=0;i<menuArray.length;i++){
-                            
-                            let textElement = await menuArray[i].findElement(By.css('.top-menu_text'));
-                            this.driver.wait(until.textElement)
-                            let _targetText = await textElement.getText();
-
-                            console.log('호이호이호이' , _targetText);
-                            if(_targetText===menuText){
-                                console.log('Menu Check  -> ',menuText);
-                                await this.driver.wait(until.elementIsVisible(menuArray[i]),5000).click();
-                                // await menuArray[i].click();
-                                break;
-                            }
-                        }
-                    }
-            }
+             }// is Array
+           
         }
         catch(err){
             console.error(err);
         }
 }
-topqa.prototype.searchMenuClick = async function(webElement){
+
+
+        // await this.driver.actions({bridge:true}).dragAndDrop(scroll,br).perform();
+
+topqa.prototype.tableViewScrollDrag = async function(css){
     try{
+        let scroll = await this.cssDisplay(css);
+
+        // Virtual Scroll 이 이동은 하나  이벤트를 받지 못함
+        // await this.driver.actions({bridge:true})
+        //     .move({origin:scroll})
+        //     .press()                       
+        //     .move({x:0,y:100,origin:Origin.POINTER})
+        //     .release()
+        //     .perform();
+        await this.driver.actions({brdige:true}).dragAndDrop(scroll).perform();
+        
+
+// 02 버전 
+// 03 버전 
+// IMS 번호 명시
 
     }
-    catch(err){console.log(err);}
+    catch(err){console.error(err);}
+
 }
 topqa.prototype.quit = async function(){
     try{
@@ -460,6 +429,61 @@ topqa.prototype.tableViewHeaderClick = async function(_id,_index,_count,_running
             endFunction('tableViewHeaderClick');
         }
 };
+/**
+ * @param _type 
+ * 
+ */
+
+topqa.prototype.tableViewPageChange = async function(_id,_type){
+    try{
+        let id= _id || false;
+        if(!id){return;}
+        let type = _type || 'next';
+        if(!['first','prev','next','last'].includes(type)){
+            console.log('not supported type ',type);
+            return;
+        }
+        let pgTypeSelector = `.top-pagination-root .${type} .cell_link`;
+
+        let retTarget = await this.isDisplayDOM(id);
+        let pgTypeElement = await retTarget.findElement(By.css(pgTypeSelector));
+        
+        await pgTypeElement.click();
+    
+    }
+    catch(err){console.error(err)}
+};
+topqa.prototype.tableViewRowCheck = async function(_id,_columnIndex,_rowIndex,_count,_running){
+    try{
+        let id= _id || false;
+        let columnIndex = (_columnIndex === 1 ? 0 : _columnIndex)  || 0;
+        let rowIndex  = (_rowIndex ===1 ? 0 : _rowIndex) || 0;
+        let count = _count || 1;
+        let running = _running || false;
+        if(!id){return;}
+
+        let checkSelector = `tbody tr td top-checkbox`;
+        let retTarget = await this.isDisplayDOM(id);
+        let rowCheckElement = await retTarget.findElement(By.css(checkSelector));
+        
+        await rowCheckElement.click();
+
+        // incomplete Fucntion 
+    }
+    catch(err){console.error(err);}
+};
+topqa.prototype.tableViewRowContextMenu = async function(_id,_columnIndex,_rowIndex,_count,_running){
+    try{
+        let id= _id || false;
+        let columnIndex = (_columnIndex === 1 ? 0 : _columnIndex)  || 0;
+        let rowIndex  = (_rowIndex ===1 ? 0 : _rowIndex) || 0;
+        let count = _count || 1;
+        let running = _running || false;
+        if(!id){return;}
+        await this.tableViewRowClick(_id,_columnIndex,_rowIndex,_count,_running,'context');
+    }
+    catch(err){console.error(err);}
+};
 topqa.prototype.tableViewRowDblClick = async function(_id,_columnIndex,_rowIndex,_count,_running){
         let id= _id || false;
         let columnIndex = (_columnIndex === 1 ? 0 : _columnIndex)  || 0;
@@ -512,13 +536,22 @@ topqa.prototype.tableViewRowClick = async function(_id,_columnIndex,_rowIndex,_c
         let selectRow = await totalRowArray[rowIndex].findElements(By.css('td'));
         
         let clickTarget = selectRow[columnIndex+startIdx];
-        if(!dblClick){
+
+        if(dblClick ==='context'){
+            console.log('Context Click');
+
+            // Context Click 코드 
+           // await this.driver.actions({bridge:true}).click(clickTarget,Button.RIGHT).perform();
+         await this.driver.actions({bridge:true}).contextClick(clickTarget).perform();
+        }
+        else if(!dblClick){
                 await selectRow[columnIndex+startIdx].click();
         }
         else{
             // 더블 클릭 코드 
-                 await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
+            await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
         }
+
         }
         catch(err){console.log("[tableViewRowClick] : ",err)}
         finally{
@@ -575,7 +608,15 @@ topqa.prototype.userWait = async function(waitTime){
     catch(err){console.warn(err);}
 }
 
+topqa.prototype.execute = async function(str){
+    try{
+        return await this.driver.executeScript(str);
+    }
+    catch(err){console.error(err);}
 
+
+
+}
 // temp remove
 topqa.prototype.createJunitReport = async function(){
     try{

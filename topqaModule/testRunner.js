@@ -11,10 +11,24 @@ var commonStatus = {
         run:async ()=>{
             try{
               await osqa.reset();
-            //   await osqa.lnbOpen('Container',1);
-            //   await osqa.lnbOpen('TableView',2);
-            // await osqa.lnbOpen(['Container','TableView','테이블 이벤트 테스트']);
-                await osqa.lnbOpen(["Container","TableView"]);
+              await osqa.lnbOpen(["Container","TableView",'테이블 이벤트 테스트']);
+            // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
+            // on-rowcheck, on-headerclick , on-headerdblclick
+            
+            let eventTableView1 = "tableview_event_test_1";
+            // await osqa.tableViewRowClick(eventTableView1);
+            // await osqa.tableViewRowDblClick(eventTableView1);
+            // await osqa.tableViewRowContextMenu(eventTableView1);
+            // await osqa.tableViewPageChange(eventTableView1);
+
+            await osqa.tableViewRowCheck(eventTableView1);
+            // await osqa.tableViewHeaderClick(eventTableView1);
+            // await osqa.tableViewHeaderDblClick(eventTableView1);
+
+                console.log(osqa.lnbMenuRoot)
+            // await osqa.userWait(2500);
+            // console.log(await osqa.execute('return Auto.get("tableview")'));
+            //   await osqa.tableViewScrollDrag("#scroll_tableview_event_test_1");
             }
             catch(err){
                 console.error(err);

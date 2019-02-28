@@ -5,7 +5,7 @@
     "adm-zip": "^0.4.11",
     "chromedriver": "^2.43.1",
     "geckodriver": "^1.12.2",
-    "iedriver": "^3.9.2",
+    "iedriver": "^3.14.1",
     "selenium-webdriver": "^4.0.0-alpha.1",
     "semver": "^4.3.6",
     "xmlbuilder": "^10.1.1"

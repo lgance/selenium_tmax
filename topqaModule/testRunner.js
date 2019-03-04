@@ -1,8 +1,9 @@
 const topqa = require('./autoManager');
-
+const {Key, Origin, Button} = require('selenium-webdriver/lib/input');
 
 var osqa;
 
+var globalDriver;
 var commonStatus = {
     "tableview":{
         statsu:true,
@@ -14,21 +15,39 @@ var commonStatus = {
               await osqa.lnbOpen(["Container","TableView",'테이블 이벤트 테스트']);
             // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
             // on-rowcheck, on-headerclick , on-headerdblclick
-            
-            let eventTableView1 = "tableview_event_test_1";
-            // await osqa.tableViewRowClick(eventTableView1);
-            // await osqa.tableViewRowDblClick(eventTableView1);
-            // await osqa.tableViewRowContextMenu(eventTableView1);
-            // await osqa.tableViewPageChange(eventTableView1);
+                let _drvier = osqa.getDriver();
+                let eventTableView1 = "tableview_event_test_1";
+                await osqa.tableViewRowClick(eventTableView1);
+                await osqa.tableViewRowDblClick(eventTableView1);
+                await osqa.tableViewRowContextMenu(eventTableView1);
+                await osqa.tableViewPageChange(eventTableView1);
+                await osqa.tableViewRowCheck(eventTableView1);
+                await osqa.tableViewHeaderClick(eventTableView1);
 
-            await osqa.tableViewRowCheck(eventTableView1);
-            // await osqa.tableViewHeaderClick(eventTableView1);
-            // await osqa.tableViewHeaderDblClick(eventTableView1);
+                // 미 동작 나중에 확인 
+                // await osqa.tableViewHeaderDblClick(eventTableView1);
+                
+                let eventTableView2 = 'tableview_event_test_2';
+                // onEdit Complete
+                await osqa.tableViewRowDblClick(eventTableView2);
+                await _drvier.actions({bridge:true})
+                .sendKeys(Key.ENTER)
+                .perform();
+                
+                // on-update
+                await osqa.execute('Top.Dom.selectById("tableview_event_test_2").update();');
+                
+                // on-headercheck
+                await osqa.tableViewHeaderCheck(eventTableView2);
 
-                console.log(osqa.lnbMenuRoot)
-            // await osqa.userWait(2500);
-            // console.log(await osqa.execute('return Auto.get("tableview")'));
-            //   await osqa.tableViewScrollDrag("#scroll_tableview_event_test_1");
+                // on-scrollEnd  callback
+                await osqa.tableViewScrollDrag("#scroll_tableview_event_test_2");
+
+                // on-cellcontextmenu 
+                await osqa.tableViewRowContextMenu(eventTableView2);
+                await osqa.userWait(2500);
+                console.log(await osqa.execute('return Auto.get("tableview")'));
+                
             }
             catch(err){
                 console.error(err);

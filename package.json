@@ -2,28 +2,19 @@
   "name": "automation",
   "version": "1.0.0",
   "dependencies": {
-    "adm-zip": "^0.4.11",
-    "chromedriver": "^2.43.1",
-    "geckodriver": "^1.12.2",
+    "chromedriver": "^2.44.0",
+    "geckodriver": "^1.14.1",
     "iedriver": "^3.14.1",
     "selenium-webdriver": "^4.0.0-alpha.1",
-    "semver": "^4.3.6",
     "xmlbuilder": "^10.1.1"
   },
   "description": "automation",
   "main": "automation.js",
+  "devDependencies": {},
   "scripts": {
+    "start":"node _auto.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/lgance/selenium_tmax.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lgance/selenium_tmax/issues"
-  },
-  "homepage": "https://github.com/lgance/selenium_tmax#readme"
+  "license": "ISC"
 }

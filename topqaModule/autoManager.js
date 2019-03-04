@@ -154,7 +154,7 @@ console.log('Chrome Start');
     }
 };
 topqa.prototype.getDriver = function(){
-    return  typeof this.driverInstance ==='undefined' ? this.driver : false;
+    return  typeof this.driver ==='undefined' ? false : this.driver;
 };
 /**
  * @param menuText 'String or Array'
@@ -164,7 +164,7 @@ topqa.prototype.getDriver = function(){
 topqa.prototype.lnbOpen = async function(menuText){
         try{
             if(!this.lnbMenuRoot)
-                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',5000);
+                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',15000);
             else{
                 console.log('Exist lnbMenu Root');
             }
@@ -203,13 +203,13 @@ topqa.prototype.tableViewScrollDrag = async function(css){
         let scroll = await this.cssDisplay(css);
 
         // Virtual Scroll 이 이동은 하나  이벤트를 받지 못함
-        // await this.driver.actions({bridge:true})
-        //     .move({origin:scroll})
-        //     .press()                       
-        //     .move({x:0,y:100,origin:Origin.POINTER})
-        //     .release()
-        //     .perform();
-        await this.driver.actions({brdige:true}).dragAndDrop(scroll).perform();
+        await this.driver.actions({bridge:true})
+            .move({origin:scroll})
+            .press()                       
+            .move({x:0,y:100,origin:Origin.POINTER})
+            .release()
+            .perform();
+        // await this.driver.actions({brdige:true}).dragAndDrop(scroll).perform();
         
 
 // 02 버전 
@@ -377,16 +377,61 @@ topqa.prototype.gnbMenuSelect = async function(spec){
         endFunction("prototype.gnbMenuSelect");
     }
 };
+
+topqa.prototype.tableViewHeaderCheck = async function(_id,_count){
+    try{
+        let id = _id || false;
+        if(!id){return;}
+        let count = _count || 1;
+        
+        let retTarget = await this.isDisplayDOM(id);
+        let headerCheck = await retTarget.findElement(By.css('thead tr th.checkable'));
+        await headerCheck.click();
+        
+        // let theadArr = await retTarget.findElements(By.css('thead tr th'));
+
+        // Array.prototype.reduce.call(theadArr,async (prev,curr)=>{
+        //     try{
+        //         const nextItem = await prev;
+        //         let _className = await curr.getAttribute('className');
+        //         let _currSplitClassName = _className.split(' ');
+        //                 if(!!_currSplitClassName.includes('checkable')){
+        //                         let _headCheckBox = await curr.findElement(By.css('.top-checkbox-check'));
+        //                     console.log(_headCheckBox);
+        //                         // await _headCheckBox.click();
+        //                 }
+        //         return nextItem;
+        //     }catch(err){console.error('Array.Reduce.HeaderCheck', err);}
+        // },Promise.resolve());
+
+    }
+    catch(err){
+        console.error(err);
+    }
+}
 // id = targetId - 
 // index = headerIndex ( default : 1 )
 // count = Click Count;( default : 1 )
 // running = true ;  // findElement X  ( default : false )
-topqa.prototype.tableViewHeaderClick = async function(_id,_index,_count,_running){
+topqa.prototype.tableViewHeaderDblClick = async function(_id,_index,_count,_running){
+
+    let id= _id || false;
+    let index = (_index === 1 ? 0 : _index) || 0;
+    let count = _count || 1;
+    let running = _running || false;
+    if(!id){return;}
+    try{
+        this.tableViewHeaderClick(id,index,count,running,true);
+    }
+    catch(err){console.error(err);}
+};
+topqa.prototype.tableViewHeaderClick = async function(_id,_index,_count,_running,_dblClick){
 
         let id= _id || false;
         let index = (_index === 1 ? 0 : _index) || 0;
         let count = _count || 1;
         let running = _running || false;
+        let dblClick = _dblClick || false;
         if(!id){return;}
     try{
          let retTarget = await this.isDisplayDOM(id);
@@ -398,28 +443,29 @@ topqa.prototype.tableViewHeaderClick = async function(_id,_index,_count,_running
         let length_;
         console.log("찾기 전 길이 : ",arr.length);
 
-        // for await(const item of arr){
-        //     let isNotColumn;
-        //     let className = await item.getAttribute('class');
-        //     isNotColumn =className.split(' ').includes('checkable') ||
-        //     className.split(' ').includes('indexable');
-        //     console.log(isNotColumn); 
-        // }
+  
         let startIdx=0;
-        await Array.prototype.reduce.call(arr,async function(acc,item,index){
-                const nextItem = await acc;
-                    let isNotColumn;
-                    let className = await item.getAttribute('class');
-                    isNotColumn = className.split(' ').includes('checkable')||
-                    className.split(' ').includes('indexable');
-                    if(isNotColumn){startIdx++;}
-                return nextItem;
-        },Promise.resolve());
+                    await Array.prototype.reduce.call(arr,async function(acc,item,index){
+                            const nextItem = await acc;
+                                let isNotColumn;
+                                let className = await item.getAttribute('class');
+                                isNotColumn = className.split(' ').includes('checkable')||
+                                className.split(' ').includes('indexable');
+                                if(isNotColumn){startIdx++;}
+                            return nextItem;
+                    },Promise.resolve());
 
         console.log("컬럼인 Index 시작 지점  ",startIdx);
         console.log("첫번째 컬럼 네임 : >" ,await arr[startIdx].getAttribute('value'));
-        // 인덱스 클릭 
-                await arr[startIdx+index].click();
+        let clickTarget = arr[startIdx+index];
+           if(!!dblClick){
+                console.log('double click');
+                console.log(clickTarget);
+                await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
+           }else{
+                await this.driver.actions({bridge:true}).click(clickTarget).perform();
+           }
+           
         }
         catch(err){ 
             console.log("[tableViewHeaderClick] :  ",err);
@@ -674,3 +720,18 @@ topqa.prototype.testSubmit = async function(){
         console.log(err);
     }
 };
+
+// not prototype static function
+topqa.driverEnter = async function(){
+    try{
+        console.log(this);
+        console.log(this.driver);
+
+
+        
+        this.driver.actions({brdige:true})
+        .sendKeys(this.driver.key.ENTER)
+        .perform();
+    }
+    catch(err){console.error(err);}
+}

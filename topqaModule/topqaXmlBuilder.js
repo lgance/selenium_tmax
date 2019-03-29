@@ -57,13 +57,20 @@ function makeJunitReport(testResultArray){
                     }
                 }
             };
-            // fail Case
-            if(curr.result.toLowerCase()==='fail' || curr.result.toLowerCase()==='block'){
+            // fail Case -> Create Junit
+            if(curr.result.toLowerCase()==='fail'){
                 let failObj  = {
                     '#text':curr.msg,
                     '@type':curr.result.toLowerCase() + 'Case'
                 };
                 junitObj.testsuite.testcase['failure'] = failObj
+            }
+            // block Case -> Create TestNG
+            else if(curr.result.toLowerCase()==='block'){
+
+
+
+
             }
             // xml Create
             const junit = builder.create(junitObj,{encoding:'utf-8'});

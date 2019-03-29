@@ -149,13 +149,63 @@ console.log('Chrome Start');
     }
     catch(err){
             console.error('driver init Error');
-            console.error(err);
+           console.error(err);
+
+        // node Exit 
+        process.exit(1);
+
             return false;
     }
 };
+
+topqa.prototype.textFieldInput = async function(_id,_input){
+    try{
+        let id = _id || false;
+        if(!id){return;}
+        let input = _input || 'Input Sample';
+
+        let textFieldEle = await this.driver.findElement(By.id(id));
+        let inputElement = await textFieldEle.findElement(By.css('input.top-textfield-text'));
+        
+        await this.driver.executeScript('arguments[0].focus()',inputElement);
+        await this.driver.actions({bridge:true})
+       .click(inputElement).sendKeys(input).perform();
+    }
+    catch(err){console.error(err);}
+}
+topqa.prototype.textFieldDblClick = async function(_id){
+    try{
+        let id = _id || false;
+        if(!id){return;}
+        this.textFieldClick(_id,true);
+    }
+    catch(err){console.error(err);}
+}
+topqa.prototype.textFieldClick = async function(_id,_dblClick){
+    try{
+        let id = _id || false;
+        let dblClick = _dblClick | false;
+        if(!id){return;}
+
+        let textfieldEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textfieldEle.findElement(By.css('input.top-textfield-text'));
+        if(!!dblClick){
+            await this.driver.actions({bridge:true})
+            .doubleClick(targetElement)
+            .perform();
+        }else{
+            await targetElement.click();
+        }
+    }
+    catch(err){console.error(err);}
+}
+
 topqa.prototype.getDriver = function(){
     return  typeof this.driver ==='undefined' ? false : this.driver;
 };
+topqa.prototype.getBy = function(){
+    return By;
+}
 /**
  * @param menuText 'String or Array'
  * @param menuDepth
@@ -176,7 +226,9 @@ topqa.prototype.lnbOpen = async function(menuText){
                         // serach Menu Text
                         let searchMenuText = menuText[i];
                         let li_menuArray = await this.lnbMenuRoot.findElements(By.css(li_selectIterator));
-
+                        if(searchMenuText===''){
+                            continue;
+                        }
                         for(let j=0;j<li_menuArray.length;j++){
                             let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
                             let currentText = await textElement.getText();
@@ -378,6 +430,16 @@ topqa.prototype.gnbMenuSelect = async function(spec){
     }
 };
 
+topqa.prototype.tableViewIndexClick = async function(_id){
+    try{
+        let id= _id || false;
+        if(!id) return;
+        let retTarget = await this.isDisplayDOM(id);
+        let indexCell = await retTarget.findElement(By.css('tbody tr .indexable'));
+        await indexCell.click();
+    }
+    catch(err){console.error(err);}
+};
 topqa.prototype.tableViewHeaderCheck = async function(_id,_count){
     try{
         let id = _id || false;
@@ -408,7 +470,7 @@ topqa.prototype.tableViewHeaderCheck = async function(_id,_count){
     catch(err){
         console.error(err);
     }
-}
+};
 // id = targetId - 
 // index = headerIndex ( default : 1 )
 // count = Click Count;( default : 1 )
@@ -436,14 +498,16 @@ topqa.prototype.tableViewHeaderClick = async function(_id,_index,_count,_running
     try{
          let retTarget = await this.isDisplayDOM(id);
         //this.currentTestWidget;
-        let thead = await retTarget.findElement(By.css('table > thead'));
-        let arr = await thead.findElements(By.css('th.head-cell'));
+        let thead = await retTarget.findElements(By.css('table > thead'));
+        let arr = await thead[1].findElements(By.css('th.head-cell'));
         console.log(await retTarget.getAttribute('tagName'));
         console.error(typeof arr);
         let length_;
         console.log("찾기 전 길이 : ",arr.length);
 
-  
+
+
+
         let startIdx=0;
                     await Array.prototype.reduce.call(arr,async function(acc,item,index){
                             const nextItem = await acc;
@@ -508,12 +572,22 @@ topqa.prototype.tableViewRowCheck = async function(_id,_columnIndex,_rowIndex,_c
         let running = _running || false;
         if(!id){return;}
 
-        let checkSelector = `tbody tr td top-checkbox`;
-        let retTarget = await this.isDisplayDOM(id);
-        let rowCheckElement = await retTarget.findElement(By.css(checkSelector));
-        
-        await rowCheckElement.click();
+        // let checkSelector = `tbody tr td top-checkbox`;
+        // let retTarget = await this.isDisplayDOM(id);
+        // let rowCheckElement = await retTarget.findElement(By.css(checkSelector));
+        // await rowCheckElement.click();
 
+        let checkSelector = `td top-checkbox label`;
+        let retTarget = await this.isDisplayDOM(id);
+        let tbody = await retTarget.findElements(By.css('table > tbody'));
+
+
+        let tableRecord = await tbody[1].findElements(By.css('tr'));
+
+        let targetCheckBox = await tableRecord[rowIndex].findElement(By.css(checkSelector));
+
+        await targetCheckBox.click();
+        // await this.driver.actions({bridge:true}).click(targetCheckBox).perform();
         // incomplete Fucntion 
     }
     catch(err){console.error(err);}
@@ -547,22 +621,39 @@ topqa.prototype.tableViewRowDblClick = async function(_id,_columnIndex,_rowIndex
 };
 topqa.prototype.tableViewRowClick = async function(_id,_columnIndex,_rowIndex,_count,_running,
     _dblClick){
-    let id= _id || false;
-    let columnIndex = (_columnIndex === 1 ? 0 : _columnIndex)  || 0;
-    let rowIndex  = (_rowIndex ===1 ? 0 : _rowIndex) || 0;
-    let count = _count || 1;
-    let running = _running || false;
-    let dblClick = _dblClick || false;
-        if(!id){return;}
-
         try{
+             let id= _id || false;
+            let columnIndex = (_columnIndex === 1 ? 0 : _columnIndex)  || 0;
+            let rowIndex  = (_rowIndex ===1 ? 0 : _rowIndex) || 0;
+            let count = _count || 1;
+            let running = _running || false;
+            let dblClick = _dblClick || false;
+           if(!id){return;}
             let startIdx=0;    
             let retTarget = await this.isDisplayDOM(id);
-            let tbody = await retTarget.findElement(By.css('table > tbody'));
-            let totalRowArray = await tbody.findElements(By.css('tr'));
-    // 이전에 checkable, indexable Indexing 확인이 필요함 
+            let tbody = await retTarget.findElements(By.css('table > tbody'));
+            
+            console.log('Test TableView ', id);
+        // 구조 변경으로 인해 2가지의 바디를 사용 함 
+        // [1] 로 처리 하면 해결되지만
+        // TableView의 구조를 확인시  odd와 even 이 있을시 사용하는 body 테이블임이 확인됨
 
-    //checking columnIndex 
+            if(tbody.length >1){
+                for(let i=0;i<tbody.length;i++){
+                    let firstChild = await tbody[i].findElement(By.css('tr'));
+                    let elementClassName = await firstChild.getAttribute('class');
+                    let isUseBody = elementClassName.split(' ').includes('odd','even');
+                    if(!!isUseBody){
+                        tbody  = tbody[i];
+                        break;
+                    }
+                }
+            }
+            
+            let totalRowArray = await tbody.findElements(By.css('tr'));
+
+
+            //checking columnIndex 
         let sampleRowInnerArray = await totalRowArray[0].findElements(By.css('td'));
 
         await Array.prototype.reduce.call(sampleRowInnerArray,async function(acc,item,index){
@@ -652,7 +743,7 @@ topqa.prototype.userWait = async function(waitTime){
         await this.driver.sleep(waitTime);
     }   
     catch(err){console.warn(err);}
-}
+};
 
 topqa.prototype.execute = async function(str){
     try{
@@ -662,18 +753,20 @@ topqa.prototype.execute = async function(str){
 
 
 
-}
+};
 // temp remove
 topqa.prototype.createJunitReport = async function(){
     try{
-        let array = [];
         const retVal = await this.driver.executeScript('return factory.report()');
+        console.log(retVal.length);
         makeJunitReport(retVal);
+
+        await this.driver.sleep(15000);
     }
     catch(err){
         console.log(err);
     }
-}
+};
 
 topqa.prototype.__log = function(error){
     // Access.log 
@@ -706,7 +799,34 @@ topqa.prototype.testReport = async function(){
         console.log(err);
     }
 };
+topqa.prototype.topButtonClick = async function(_id,_dblClick){
+    try{
+        let id = _id || false;
+        let dblClick = _dblClick| false;
+        if(!id){return;}
+    
+        let topElement = this.driver.findElement(By.id(id));
+        let targetElement = await topElement.findElement(By.css('.top-button-root'));
+        
+        
+        if(!!dblClick){
+            await this.driver.actions({bridge:true}).doubleClick(targetElement).perform();
+        }
+        else{
+            await targetElement.click();
+        }
 
+    }
+    catch(err){console.error(err);}
+}
+topqa.prototype.topButtonDblClick = async function(_id){
+    try{
+        let id = _id || false;
+        if(!id){return;}
+            this.topButtonClick(id,true);
+    }
+    catch(err){console.error(err);}
+}
 
 // is Deprecated 
 topqa.prototype.testSubmit = async function(){
@@ -726,12 +846,9 @@ topqa.driverEnter = async function(){
     try{
         console.log(this);
         console.log(this.driver);
-
-
-        
-        this.driver.actions({brdige:true})
+        this.driver.actions({bridge:true})
         .sendKeys(this.driver.key.ENTER)
         .perform();
     }
     catch(err){console.error(err);}
-}
+};

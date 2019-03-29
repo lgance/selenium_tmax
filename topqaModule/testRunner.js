@@ -1,12 +1,13 @@
 const topqa = require('./autoManager');
 const {Key, Origin, Button} = require('selenium-webdriver/lib/input');
 
+
 var osqa;
 
 var globalDriver;
 var commonStatus = {
     "tableview":{
-        statsu:true,
+        status:true,
         testCase:[],
         actionfilter:{},
         run:async ()=>{
@@ -34,20 +35,54 @@ var commonStatus = {
                 .sendKeys(Key.ENTER)
                 .perform();
                 
+                
                 // on-update
                 await osqa.execute('Top.Dom.selectById("tableview_event_test_2").update();');
                 
-                // on-headercheck
+                // // on-headercheck
                 await osqa.tableViewHeaderCheck(eventTableView2);
 
-                // on-scrollEnd  callback
+                // // on-scrollEnd  callback
                 await osqa.tableViewScrollDrag("#scroll_tableview_event_test_2");
 
-                // on-cellcontextmenu 
+                // // on-cellcontextmenu 
                 await osqa.tableViewRowContextMenu(eventTableView2);
-                await osqa.userWait(2500);
-                console.log(await osqa.execute('return Auto.get("tableview")'));
+
+                // // on-indexclick
+                await osqa.tableViewIndexClick(eventTableView2);
+
+                // // on-nodata Callback
+                await osqa.execute('topqaAutomationRepo.setValue("onNoDataCallbackInstance",[]);');
+            
+
+                // TableView API Test Start 
+                /*
+                    PreCondition 
+                        API 테스트의 경우 get 을 먼저 선행하기 때문에
+                        2,2 셀에 클릭 이벤트 클릭이 한번 선행되어야함 
+
+                        getCheckedData 로인해서
+
+                        체크박스도 2 로우에 미리 클릭 동작 선행
+
+                */
+            //    await osqa.userWait(2000);
+
+               await osqa.lnbOpen(["","",'테이블 API 테스트']);
+
+                let apiTableView1 = "tableview_api_test_1";
+
+                await osqa.tableViewRowClick(apiTableView1,2,2);
+                await osqa.tableViewRowCheck(apiTableView1,0,2);
                 
+                await osqa.topButtonClick("tableViewAPIBtn");
+                await osqa.userWait(2500);
+                
+            // 테스트 종료 후 리포팅 
+            // console.log(await osqa.execute('return Auto.get("tableview")'));
+                await osqa.execute('return Auto.syncFactory("tableview")');
+                console.log(await osqa.execute('return factory.report()'));
+                                    // Auto.syncFactory('tableview');
             }
             catch(err){
                 console.error(err);
@@ -57,7 +92,51 @@ var commonStatus = {
     "button":{
         status:false,
         run:async()=>{
+          
+            await osqa.lnbOpen(["Button","Button",'버튼 이벤트 테스트']);
+            let eventBtn_1 = "button_event_1";
+
+            await osqa.topButtonClick(eventBtn_1);
+            await osqa.topButtonDblClick(eventBtn_1);
+
+
             console.log('Button Test Success');
+        }
+    },
+    "spinner":{
+        status:false,
+        run:async()=>{
+            await osqa.lnbopen(['Controls','Spinner','스피너 이벤트 테스트']);
+
+        }
+
+    },
+    "textfield":{
+        status:false,
+        run:async()=>{
+            await osqa.lnbOpen(['Text','TextField','텍스트필드 이벤트 테스트']);
+            let _driver = osqa.getDriver();
+            let _by = osqa.getBy();
+
+            let textfield_event_test_1 = 'textfield_event_test_1';
+            await osqa.textFieldInput(textfield_event_test_1,'Test Key Input222');
+            // on-iconclick 
+            let iconTargetTextField = await _driver.findElement(_by.id('textfield_event_test_1'));
+            let iconElement = await iconTargetTextField.findElement(_by.css('span.top-textfield-icon'));
+            await iconElement.click();
+
+            //textfield event
+            let textfield_event_test_2 = 'textfield_event_test_2';
+            await osqa.textFieldClick(textfield_event_test_2);
+            await osqa.textFieldDblClick(textfield_event_test_2);
+
+            await osqa.textFieldInput(textfield_event_test_2,'Test Key Input');
+
+
+            await osqa.userWait(2500);
+            console.log(await osqa.execute('return Auto.get("textfield")'));
+            console.log(await osqa.execute('return Auto.get()'));
+
         }
     },
     "regression":{
@@ -124,6 +203,7 @@ exports.start = async function(){
         let commonStatusKeyArr = Object.keys(commonStatus);
         await commonStatusKeyArr.reduce(async(prev,curr,index,arr)=>{
                 const nextItem = await prev;
+                await osqa.reset();
                 await run(curr);
                 await osqa.userWait(1000);
         },Promise.resolve());
@@ -158,9 +238,15 @@ exports.quit = async function(){
         }{  
             console.log('runner is Closed');
         //    await osqa.gnbMenuSelect('integration');
-           // deprecated
-           //await osqa.testReport();
-        //    await osqa.createJunitReport();
+
+        // await osqa.createJunitReport();
+
+
+
+        // deprecated
+        // console.log(await osqa.testReport());
+           
+
            await osqa.quit();
         }
     }

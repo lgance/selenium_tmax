@@ -30,6 +30,7 @@ const{ By, until, actions } = webdriver;
 // Origin,
 
 const { makeJunitReport } = require('./topqaXmlBuilder');
+const { makeExcelReport } = require('./topqaExcelBuilder');
 
 // no param -> default 'chrome';
 // param -> not 'c
@@ -418,7 +419,8 @@ topqa.prototype.gnbMenuSelect = async function(spec){
     console.log("this Spec  : ",spec);
     try{
         console.log("ID Check   :  " + selectList[spec]);
-        let moveBtn = await this.driver.findElement(By.id(selectList[spec]));
+        // let moveBtn = await this.driver.findElement(By.id(selectList[spec]));
+        let moveBtn = await this.isDisplayDOM(selectList[spec],6000);
         await moveBtn.click();
     }
     catch(err){
@@ -761,20 +763,29 @@ topqa.prototype.createJunitReport = async function(){
         console.log(retVal.length);
         makeJunitReport(retVal);
 
-        await this.driver.sleep(15000);
+        await this.driver.sleep(3500);
     }
     catch(err){
         console.log(err);
     }
 };
 
+topqa.prototype.createExcelReport = async function(){
+    try{
+        const retVal = await this.driver.executeScript('return factory.report()');
+        makeExcelReport(retVal);
+        await this.driver.sleep(2000);
+    }
+    catch(err){
+            console.log(err);
+    }
+
+}
+
 topqa.prototype.__log = function(error){
     // Access.log 
     console.log(error);
 };
-
-
-
 
 
 function endFunction(message){

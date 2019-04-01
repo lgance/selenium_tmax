@@ -4,11 +4,21 @@
 *.bak
 
 ##  npm Modules
-
 node_modules/
 
 ## test code with test report
+
+log/*.log
+log/*.txt
+
 test.js
 chromeBuilding/
 ieBuilding/
 firefoxBuilding/
+topqaExcel/
+
+topqaModule/testCase.js
+
+chrome_Automation.js
+automation.zip
+dummy/

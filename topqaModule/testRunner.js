@@ -1,4 +1,5 @@
 const topqa = require('./autoManager');
+
 const {Key, Origin, Button} = require('selenium-webdriver/lib/input');
 
 
@@ -6,13 +7,28 @@ var osqa;
 
 var globalDriver;
 var commonStatus = {
+    "api":{
+        status:true,
+        name:"api",
+        run:async () =>{
+            try{
+                // this is Wait Trick 
+                await osqa.gnbMenuSelect('api');
+                await osqa.gnbMenuSelect('automation');
+                await osqa.execute('factory.syncAPIAutomation();');
+            }
+            catch(err){
+                console.error(err);
+            }
+        }
+    },
     "tableview":{
         status:true,
         testCase:[],
+        name:"tableview",
         actionfilter:{},
         run:async ()=>{
             try{
-              await osqa.reset();
               await osqa.lnbOpen(["Container","TableView",'테이블 이벤트 테스트']);
             // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
             // on-rowcheck, on-headerclick , on-headerdblclick
@@ -25,6 +41,8 @@ var commonStatus = {
                 await osqa.tableViewRowCheck(eventTableView1);
                 await osqa.tableViewHeaderClick(eventTableView1);
 
+                
+                
                 // 미 동작 나중에 확인 
                 // await osqa.tableViewHeaderDblClick(eventTableView1);
                 
@@ -78,11 +96,10 @@ var commonStatus = {
                 await osqa.topButtonClick("tableViewAPIBtn");
                 await osqa.userWait(2500);
                 
-            // 테스트 종료 후 리포팅 
-            // console.log(await osqa.execute('return Auto.get("tableview")'));
+
+                // adding TestCase Repo 
                 await osqa.execute('return Auto.syncFactory("tableview")');
-                console.log(await osqa.execute('return factory.report()'));
-                                    // Auto.syncFactory('tableview');
+
             }
             catch(err){
                 console.error(err);
@@ -90,7 +107,7 @@ var commonStatus = {
         }
     },
     "button":{
-        status:false,
+        status:true,
         run:async()=>{
           
             await osqa.lnbOpen(["Button","Button",'버튼 이벤트 테스트']);
@@ -98,21 +115,24 @@ var commonStatus = {
 
             await osqa.topButtonClick(eventBtn_1);
             await osqa.topButtonDblClick(eventBtn_1);
-
+             
 
             console.log('Button Test Success');
+
+            await osqa.execute('return Auto.syncFactory("button")');
+            
         }
     },
     "spinner":{
-        status:false,
+        status:true,
         run:async()=>{
-            await osqa.lnbopen(['Controls','Spinner','스피너 이벤트 테스트']);
+            await osqa.lnbOpen(['Controls','Spinner','스피너 이벤트 테스트']);
 
         }
 
     },
     "textfield":{
-        status:false,
+        status:true,
         run:async()=>{
             await osqa.lnbOpen(['Text','TextField','텍스트필드 이벤트 테스트']);
             let _driver = osqa.getDriver();
@@ -134,8 +154,9 @@ var commonStatus = {
 
 
             await osqa.userWait(2500);
-            console.log(await osqa.execute('return Auto.get("textfield")'));
-            console.log(await osqa.execute('return Auto.get()'));
+            // console.log(await osqa.execute('return Auto.get("textfield")'));
+            // console.log(await osqa.execute('return Auto.get()'));
+            await osqa.execute('return Auto.syncFactory("textfield")');
 
         }
     },
@@ -237,17 +258,9 @@ exports.quit = async function(){
            return; 
         }{  
             console.log('runner is Closed');
-        //    await osqa.gnbMenuSelect('integration');
-
         // await osqa.createJunitReport();
-
-
-
-        // deprecated
-        // console.log(await osqa.testReport());
-           
-
-           await osqa.quit();
+        await osqa.createExcelReport();
+        await osqa.quit();
         }
     }
     catch(err){

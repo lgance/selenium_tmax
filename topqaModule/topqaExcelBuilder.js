@@ -170,7 +170,7 @@ function makeExcelReport(testResultArray,browserType){
                 .string(topqaObj[headerColumnObjectKey[i-1]]);
             }
             return ++lastLength;
-      },++lastLength);
+      },lastLength);
     
       wb.write(excelName);
 

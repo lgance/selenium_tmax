@@ -140,7 +140,8 @@ function makeExcelReport(testResultArray,browserType){
      };
 
       //contents , msg      resutl,        tc,          tcNum,       type
-      let automationLength = testResultArray.length+2;
+      
+      let automationLength = testResultArray.length + 2;
       let headerColumnObjectKey = Object.keys(testResultArray[0]);
 
       testResultArray.forEach((item,index,arr) =>{
@@ -178,7 +179,7 @@ function makeExcelReport(testResultArray,browserType){
   }
 
 }
-makeExcelReport();
+
 
 module.exports = {
     makeExcelReport,

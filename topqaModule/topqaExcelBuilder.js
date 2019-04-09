@@ -1,4 +1,8 @@
+// is not Styling
 const XLSX = require('xlsx');
+
+// is Styling
+const XL = require('excel4node');
 
 const fs = require('fs');
 const path= require('path');
@@ -47,14 +51,16 @@ function zeroPrint(input,digits){
 
 
 
-function makeExcelReport(testResultArray){
+function makeExcelReport(testResultArray,browserType){
 
   
+  const _browserType = browserType || 'chrome';
+  console.log(`테스트 결과 Browser는 ${_browserType} 입니다.`);
   const dirPath = path.join(__dirname,'../topqaExcel');
   !fs.existsSync(dirPath) ?  makeDir(dirPath) : console.log('폴더 미생성');
 
   let date_ = moment().format('YYYY_MM_DD');
-  let excelName = dirPath+'/topqaResult_'+date_+'.xlsx';
+  let excelName = `${dirPath}/topqaResult_${date_}_${_browserType}.xlsx`;
 
   const automationSheetName ="TOP_Automation_Test_Result";
   const regressionSheetName="TOP_Regression_Test_Result";
@@ -62,7 +68,6 @@ function makeExcelReport(testResultArray){
   if(typeof XLSX == 'undefined') XLSX = require('xlsx');
   /* Checked result xlsx */
   if(!!fs.existsSync(excelName)){
-      console.log('엑셀 있음');
       // read workbook
       const workbook = XLSX.readFile(excelName,{
               cellStyles:true
@@ -73,52 +78,107 @@ function makeExcelReport(testResultArray){
       let autoWorkSheet = workbook.Sheets[automationSheetName];
       let regWorkSheet = workbook.Sheets[regressionSheetName];
       
-      /* Find desired cell */
-      let desired_cell = worksheet[address_of_cell];
-      
-      /* Get the value */
-      let desired_value = (desired_cell ? desired_cell.v : undefined);
+      console.log('엑셀이 있습니다.');
 
   }
   else{
       console.log('테스트 결과가 없습니다. excel 을 생성합니다.');
-          
-          let lastLength = parseInt(testResultArray[testResultArray.length-1].tcNum.split('_')[1]);
-          let regressionArr = [];
-          topqaTestCase.reduce((prev,c,i,a) =>{
-                  let tcNum = "TOP_"+zeroPrint(prev,4);
-                  regressionArr.push({
-                      "contents":c.contents,
-                      "msg":"",
-                      "result":"",
-                      "tc":c.ims.toString(),
-                      "tcNum":tcNum,
-                      "type":"regression"
-                  })
+     
+      let wb = new XL.Workbook();
 
-                  return ++prev;
-          },++lastLength);
+      // Excel Setting Options and Styles
+      let options = {
 
-        /* make the worksheet */
-        const automationWorkSheet = XLSX.utils.json_to_sheet(testResultArray);
-        const regressionWorkSheet = XLSX.utils.json_to_sheet(regressionArr);
-        /* add to workbook */
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, automationWorkSheet,automationSheetName);
-        XLSX.utils.book_append_sheet(wb, regressionWorkSheet,regressionSheetName,)
+      }
+      let topqaStyle = wb.createStyle({
+          font:{
+              bold:true,
+          },
+          alignment:{
+               horizontal:'center'
+          },
+          border:{
+            left:{
+              style:'thin',
+              color:'#000000'
+            },
+            right:{
+              style:'thin',
+              color:'#000000'
+            },
+            top:{
+              style:'thin',
+              color:'#000000'
+            },
+            bottom:{
+              style:'thin',
+              color:'#000000'
+            }
+          }
+      });
 
-        /* generate an XLSX file */
-        XLSX.writeFile(wb, excelName, {cellStyles:true});
+
+      // add Work Sheet
+      let automationWorkSheet = wb.addWorksheet(automationSheetName,options);
+      let regressionWorkSheet = wb.addWorksheet(regressionSheetName,options);
+      
+      let headerColumnName = ["내용","실패 메시지","테스트 결과","테스트 케이스","테스트 넘버링","테스트 타입"];
+      let headerColumnNameLength = headerColumnName.length;
+      let columnWidth = 30;
+
+      // Work Sheet Settings
+      for(let i=1;i<=6;i++){
+        automationWorkSheet.column(i).setWidth(columnWidth);
+        automationWorkSheet.cell(1,i)
+          .string(headerColumnName[i-1])
+          .style(topqaStyle);
+
+        regressionWorkSheet.column(i).setWidth(columnWidth);
+        regressionWorkSheet.cell(1,i)
+          .string(headerColumnName[i-1])
+          .style(topqaStyle);
+     };
+
+      //contents , msg      resutl,        tc,          tcNum,       type
+      let automationLength = testResultArray.length+2;
+      let headerColumnObjectKey = Object.keys(testResultArray[0]);
+
+      testResultArray.forEach((item,index,arr) =>{
+          let cellIndex = index+2;
+          for(let i=1;i<=headerColumnNameLength;i++){
+             automationWorkSheet.cell(cellIndex,i)
+                .string(item[headerColumnObjectKey[i-1]]);
+          }
+      });
+
+      let lastLength = parseInt(testResultArray[testResultArray.length-1].tcNum.split('_')[1]);
+      let tcNum = "TOP_"+zeroPrint(++lastLength,4);
+       // regression test Result set to Excel
+       topqaTestCase.reduce((prev,curr,index,arr)=>{
+            let cellIndex = index+2;
+            let tcNum = "TOP_"+zeroPrint(prev,4);
+            let topqaObj = {
+                contents:curr.contents,
+                msg:"",
+                result:"",
+                tc:curr.ims.toString(),
+                tcNum:tcNum,
+                type:"regression"
+            }
+            for(let i=1;i<headerColumnNameLength;i++){
+                regressionWorkSheet.cell(cellIndex,i)
+                .string(topqaObj[headerColumnObjectKey[i-1]]);
+            }
+            return ++lastLength;
+      },++lastLength);
+    
+      wb.write(excelName);
+
+     
   }
-  // 
-  // const firstWSheet = workbook.Sheets[firstWSheetName];
-  // const workbook = xlsx.readFile('a.xlsx');
 
-  // console.log(firstWsheet['A1'].v);
-  // xlsx.writeFile(workbook,'out.xlsx');
 }
-
-// makeExcelReport();
+makeExcelReport();
 
 module.exports = {
     makeExcelReport,

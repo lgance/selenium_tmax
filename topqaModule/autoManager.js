@@ -420,7 +420,7 @@ topqa.prototype.gnbMenuSelect = async function(spec){
     try{
         console.log("ID Check   :  " + selectList[spec]);
         // let moveBtn = await this.driver.findElement(By.id(selectList[spec]));
-        let moveBtn = await this.isDisplayDOM(selectList[spec],6000);
+        let moveBtn = await this.isDisplayDOM(selectList[spec],8000);
         await moveBtn.click();
     }
     catch(err){
@@ -821,6 +821,7 @@ topqa.prototype.topButtonClick = async function(_id,_dblClick){
         
         
         if(!!dblClick){
+            console.warn('Button DblCLick ');
             await this.driver.actions({bridge:true}).doubleClick(targetElement).perform();
         }
         else{

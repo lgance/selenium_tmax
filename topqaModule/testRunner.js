@@ -16,6 +16,7 @@ var commonStatus = {
                 await osqa.gnbMenuSelect('api');
                 await osqa.gnbMenuSelect('automation');
                 await osqa.execute('factory.syncAPIAutomation();');
+                
             }
             catch(err){
                 console.error(err);
@@ -29,6 +30,23 @@ var commonStatus = {
         actionfilter:{},
         run:async ()=>{
             try{
+
+                // await osqa.lnbOpen(["Container","TableView",'테이블 API 테스트']);
+
+                // let apiTableView2 = "tableview_api_test_1";
+
+                // await osqa.tableViewRowClick(apiTableView2,2,2);
+
+                // await osqa.topButtonClick("tableViewAPIBtn");
+
+                // await osqa.userWait(2500);
+                
+                // console.log(await osqa.execute('return Auto.get("tableview","api")'));
+
+                // return false;
+
+
+
               await osqa.lnbOpen(["Container","TableView",'테이블 이벤트 테스트']);
             // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
             // on-rowcheck, on-headerclick , on-headerdblclick
@@ -41,8 +59,6 @@ var commonStatus = {
                 await osqa.tableViewRowCheck(eventTableView1);
                 await osqa.tableViewHeaderClick(eventTableView1);
 
-                
-                
                 // 미 동작 나중에 확인 
                 // await osqa.tableViewHeaderDblClick(eventTableView1);
                 
@@ -85,17 +101,22 @@ var commonStatus = {
 
                 */
             //    await osqa.userWait(2000);
+               await osqa.userWait(1500);
+
 
                await osqa.lnbOpen(["","",'테이블 API 테스트']);
 
                 let apiTableView1 = "tableview_api_test_1";
 
-                await osqa.tableViewRowClick(apiTableView1,2,2);
+                // row Click , Row Check is Conflict Test Case
+                // 임시 제거 2019 - 04 - 09
+                // await osqa.tableViewRowClick(apiTableView1,2,2);
+
                 await osqa.tableViewRowCheck(apiTableView1,0,2);
                 
                 await osqa.topButtonClick("tableViewAPIBtn");
+
                 await osqa.userWait(2500);
-                
 
                 // adding TestCase Repo 
                 await osqa.execute('return Auto.syncFactory("tableview")');
@@ -114,12 +135,16 @@ var commonStatus = {
             let eventBtn_1 = "button_event_1";
 
             await osqa.topButtonClick(eventBtn_1);
+
+            await osqa.userWait(1500);
+
             await osqa.topButtonDblClick(eventBtn_1);
              
-
+            await osqa.userWait(1500);
             console.log('Button Test Success');
 
             await osqa.execute('return Auto.syncFactory("button")');
+
             
         }
     },
@@ -224,9 +249,14 @@ exports.start = async function(){
         let commonStatusKeyArr = Object.keys(commonStatus);
         await commonStatusKeyArr.reduce(async(prev,curr,index,arr)=>{
                 const nextItem = await prev;
+                if(typeof nextItem ==="boolean" && !nextItem){
+                    return Promise.resolve();
+                }
                 await osqa.reset();
-                await run(curr);
+                let flag = await run(curr);
                 await osqa.userWait(1000);
+                return flag;
+                
         },Promise.resolve());
 
     }
@@ -260,6 +290,8 @@ exports.quit = async function(){
             console.log('runner is Closed');
         // await osqa.createJunitReport();
         await osqa.createExcelReport();
+        // var tt = await osqa.execute('return Auto.get("button")');
+        // console.log(tt);
         await osqa.quit();
         }
     }

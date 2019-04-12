@@ -23,6 +23,25 @@ var commonStatus = {
             }
         }
     },
+    "radiobutton":{
+        status:true,
+        name:"radiobutton",
+        run:async ()=>{
+
+
+            // API 테스트 
+            await osqa.lnbOpen(["Controls","RadioButton",'라디오 API 테스트']);
+
+            await osqa.topButtonClick("radioButtonAPI");
+
+            await osqa.userWait(2500);
+
+            // adding TestCase Repo 
+            await osqa.execute('return Auto.syncFactory("radiobutton")');
+
+         
+        }
+    },
     "tableview":{
         status:true,
         testCase:[],
@@ -44,8 +63,6 @@ var commonStatus = {
                 // console.log(await osqa.execute('return Auto.get("tableview","api")'));
 
                 // return false;
-
-
 
               await osqa.lnbOpen(["Container","TableView",'테이블 이벤트 테스트']);
             // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
@@ -133,19 +150,12 @@ var commonStatus = {
           
             await osqa.lnbOpen(["Button","Button",'버튼 이벤트 테스트']);
             let eventBtn_1 = "button_event_1";
-
-            await osqa.topButtonClick(eventBtn_1);
-
-            await osqa.userWait(1500);
-
-            await osqa.topButtonDblClick(eventBtn_1);
-             
-            await osqa.userWait(1500);
-            console.log('Button Test Success');
-
-            await osqa.execute('return Auto.syncFactory("button")');
-
             
+            await osqa.topButtonClick(eventBtn_1);
+            await osqa.userWait(2500);
+            await osqa.topButtonDblClick(eventBtn_1);
+            await osqa.userWait(2500);
+            await osqa.execute('return Auto.syncFactory("button")');
         }
     },
     "spinner":{
@@ -177,12 +187,54 @@ var commonStatus = {
 
             await osqa.textFieldInput(textfield_event_test_2,'Test Key Input');
 
-
             await osqa.userWait(2500);
-            // console.log(await osqa.execute('return Auto.get("textfield")'));
-            // console.log(await osqa.execute('return Auto.get()'));
+
+            // on copy 랑 on paste 동작 테스트 해야댐 
+
+
+
+            await osqa.lnbOpen(["","",'텍스트필드 API 테스트']);
+
+            let textfield_api_test ="textField_api_test_";
+            await osqa.topButtonClick(textfield_api_test);
+            //focus API call
+            await osqa.execute('Top.Dom.selectById("textFieldFocusBlur").focus();');
+
+            //blur API call
+            await osqa.execute('Top.Dom.selectById("textFieldFocusBlur").blur();');
+
+
+
+
+            // sync for factory
             await osqa.execute('return Auto.syncFactory("textfield")');
 
+        }
+    },
+
+    "textarea":{
+        status:true,
+        run:async () =>{
+            await osqa.lnbOpen(["","TextArea","텍스트에어리어 이벤트 테스트"]);
+
+            let textarea_event_target = "";
+
+
+
+            
+            // on copy  on paste 코드 작성 요망
+            // 작성 후 이 코멘트 제거 
+
+            await osqa.lnbOpen(["","","텍스트에어리어 API 테스트"]);
+            let textArea_api_target ="textarea_api_targetButton";
+                await osqa.topButtonClick(textArea_api_target);
+
+            // focus API call
+            // blur APO call
+
+
+            // sync for factory
+            await osqa.execute('return Auto.syncFactory("textarea")');
         }
     },
     "regression":{
@@ -250,7 +302,7 @@ exports.start = async function(){
         await commonStatusKeyArr.reduce(async(prev,curr,index,arr)=>{
                 const nextItem = await prev;
                 if(typeof nextItem ==="boolean" && !nextItem){
-                    return Promise.resolve();
+                    return nextItem;
                 }
                 await osqa.reset();
                 let flag = await run(curr);
@@ -269,11 +321,11 @@ exports.start = async function(){
  */
 async function run(widgetName){
         try{
-    !!commonStatus[widgetName] ?
-	(commonStatus[widgetName].status===false ?
-            console.warn(`is ${widgetName} not test Set`) :
-			await commonStatus[widgetName].run()) :
-            console.warn(`is not Test Case ${widgetName}`);
+            let testValue = !!commonStatus[widgetName] ?
+	        (commonStatus[widgetName].status===false ? console.warn(`is ${widgetName} not test Set`) :
+            await commonStatus[widgetName].run()) : console.warn(`is not Test Case ${widgetName}`);
+
+            return testValue;
     }
     catch(err){console.log(err);}
 }

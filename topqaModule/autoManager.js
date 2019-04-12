@@ -94,7 +94,7 @@ function topqa(){
 };
 topqa.prototype.reset = function(){
     this.currlnbMenu ='';
-    this.currlnbMenuText='';
+    // this.currlnbMenuText='';
     this.currlnbSubMenu ='';
     this.currlnbSubMenuText='';
     this.currentTestWidget='';
@@ -236,7 +236,14 @@ topqa.prototype.lnbOpen = async function(menuText){
                             
                             if(currentText===searchMenuText){
                                let clickTarget = await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'));
-                               await clickTarget.click();
+                               // 이미 선택되어있는 경우 또 선택하면 메뉴가 닫히기 때문에 해당 작업은 막아야함
+                               if(this.lnbMenuText===currentText){
+                                    // 같은 경우 
+                               }
+                               else{
+                                    this.lnbMenuText=currentText;
+                                    await clickTarget.click();
+                               }
                             }
                         }
                      }
@@ -726,7 +733,7 @@ topqa.prototype.cssDisplay = async function(selector,waitTime){
 };
 // Top.js is ID Based Element 
 topqa.prototype.isDisplayDOM = async function(selector,waitTime){
-    let maxWaitTime = waitTime || 3000;
+    let maxWaitTime = waitTime || 4000;
     try{
         let target;
         target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
@@ -742,6 +749,7 @@ topqa.prototype.isDisplayDOM = async function(selector,waitTime){
 
 topqa.prototype.userWait = async function(waitTime){
     try{
+        console.log(`Wait Time ............ {${waitTime/1000} 초}`);
         await this.driver.sleep(waitTime);
     }   
     catch(err){console.warn(err);}
@@ -749,6 +757,7 @@ topqa.prototype.userWait = async function(waitTime){
 
 topqa.prototype.execute = async function(str){
     try{
+        console.log(`executeScript  : [ ${str} ]`);
         return await this.driver.executeScript(str);
     }
     catch(err){console.error(err);}
@@ -823,10 +832,15 @@ topqa.prototype.topButtonClick = async function(_id,_dblClick){
         if(!!dblClick){
             console.warn('Button DblCLick ');
             await this.driver.actions({bridge:true}).doubleClick(targetElement).perform();
+            console.log(`Top Button Double Click :  ${id}`);
         }
         else{
             await targetElement.click();
+            console.log(`Top Button Click :  ${id}`);
         }
+        
+
+        this.driver.sleep(500);
 
     }
     catch(err){console.error(err);}

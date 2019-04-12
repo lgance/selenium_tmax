@@ -52,7 +52,6 @@ function zeroPrint(input,digits){
 
 
 function makeExcelReport(testResultArray,browserType){
-
   
   const _browserType = browserType || 'chrome';
   console.log(`테스트 결과 Browser는 ${_browserType} 입니다.`);
@@ -179,7 +178,6 @@ function makeExcelReport(testResultArray,browserType){
   }
 
 }
-
 
 module.exports = {
     makeExcelReport,

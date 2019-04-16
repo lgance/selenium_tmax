@@ -65,6 +65,9 @@ function topqa(){
     this.currTestPage;
     // topLNB Menu
 
+
+
+
     this.lnbMenuRoot;
     // 1 depth Web Element with Text
     this.currlnbMenu;
@@ -87,7 +90,12 @@ function topqa(){
     // tableview test  Session Created Error 
     this._url = 'http://127.0.0.1:5279/topqa/index.html#!/automation';
 
+    // 버전 별 테이블 구조가 자꾸 바뀜 
+    this._topVersion;
+
+
     
+
 
 
 
@@ -141,11 +149,14 @@ console.log('Chrome Start');
         .withCapabilities(ieCapa)
         .build();
     }
-
+// with Capabilities는 this.capabilities_ 를 한다
    
         //    driver = await driver.build();
             await this.driver.get(this._url);
+            // await this.driver.wait(until.titleIs('topMainWindow'),115000);
             await this.driver.manage().window().maximize();
+
+        // title topMainWindow
             // await driver.findElement(By.id('autoBtn')).click();;
     }
     catch(err){
@@ -166,9 +177,10 @@ topqa.prototype.textFieldInput = async function(_id,_input){
         let input = _input || 'Input Sample';
 
         let textFieldEle = await this.driver.findElement(By.id(id));
+        // let textFieldEle = await this.isDisplayDOM(id);
         let inputElement = await textFieldEle.findElement(By.css('input.top-textfield-text'));
         
-        await this.driver.executeScript('arguments[0].focus()',inputElement);
+        await this.driver.executeScript('arguments[0].focus();',inputElement);
         await this.driver.actions({bridge:true})
        .click(inputElement).sendKeys(input).perform();
     }
@@ -181,6 +193,9 @@ topqa.prototype.textFieldDblClick = async function(_id){
         this.textFieldClick(_id,true);
     }
     catch(err){console.error(err);}
+    finally{
+        console.log(`textField DblClick ${_id}`);
+    }
 }
 topqa.prototype.textFieldClick = async function(_id,_dblClick){
     try{
@@ -199,6 +214,9 @@ topqa.prototype.textFieldClick = async function(_id,_dblClick){
         }
     }
     catch(err){console.error(err);}
+    finally{
+        console.log(`textField Click ${_id}`);
+    }
 }
 
 topqa.prototype.getDriver = function(){
@@ -214,45 +232,105 @@ topqa.prototype.getBy = function(){
  */
 topqa.prototype.lnbOpen = async function(menuText){
         try{
-            if(!this.lnbMenuRoot)
-                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',15000);
-            else{
-                console.log('Exist lnbMenu Root');
+            if(!Array.isArray(menuText)){
+                console.log('MenuText is only Array');
+                return;
             }
-            let cssSelector = '.top-menu-root .top-menu_nav li.depth';
-            if(Array.isArray(menuText)){
-                     for(let i=0;i<menuText.length;i++){
-                        // 메뉴 리턴 선택자
-                        let li_selectIterator = `.top-menu-root .top-menu_nav li.depth${i+1}`;
-                        // serach Menu Text
-                        let searchMenuText = menuText[i];
-                        let li_menuArray = await this.lnbMenuRoot.findElements(By.css(li_selectIterator));
-                        if(searchMenuText===''){
-                            continue;
-                        }
-                        for(let j=0;j<li_menuArray.length;j++){
-                            let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
-                            let currentText = await textElement.getText();
-                            
-                            if(currentText===searchMenuText){
-                               let clickTarget = await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'));
-                               // 이미 선택되어있는 경우 또 선택하면 메뉴가 닫히기 때문에 해당 작업은 막아야함
-                               if(this.lnbMenuText===currentText){
-                                    // 같은 경우 
-                               }
-                               else{
-                                    this.lnbMenuText=currentText;
-                                    await clickTarget.click();
-                               }
-                            }
-                        }
-                     }
-             }// is Array
+            if(!this.lnbMenuRoot){
+                console.log('lnbMenuRoot find');
+                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',25000);
+            }
            
+        console.log(menuText);
+        let console_ = this.qaConsole;
+        let menuTextLength = menuText.length;
+        let returnflag = false;
+        for(let i=0;i<menuTextLength;i++){
+            let searchMenuText = menuText[i];
+            if(searchMenuText===''){continue;}
+
+            let li_selectIterator;
+            let li_menuArray
+
+            if(this.currlnbMenu!==""  &&  this.currlnbMenu!=="undefined"){
+                // li_selectIterator = 'ul[style="display: block;"] > li';
+                console.log(await this.currlnbMenu.getTagName());               
+                li_selectIterator = i===1 ? "li[class~=top-menu_collapsed]" : 'li';
+                li_menuArray = await this.currlnbMenu.findElements(By.css(li_selectIterator));
+            }
+            else{
+                li_selectIterator  = `.top-menu-root .top-menu_nav li.depth${i+1}`;
+                li_menuArray = await this.lnbMenuRoot.findElements(By.css(li_selectIterator));
+            }
+
+            console_(`Search Text   ${searchMenuText}`);
+            if(li_menuArray.lnegth===0){console.log(`길이가 0입니다.${li_selectIterator}`)}
+            console_(`menuLnegth ${li_menuArray.length}`);
+            console.log(li_selectIterator);
+
+           
+            let li_menuArrayLength = li_menuArray.length;
+            for(let j=0;j<li_menuArrayLength;j++){
+                    
+                    // span Tags
+                    // let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
+                    let textElement = await this.driver.wait(
+                        until.elementIsVisible(await li_menuArray[j].findElement(By.css('.top-menu_text'))
+                        ,3000)
+                    );
+                    let currentText = await textElement.getText();
+                    let currentAttrText = await textElement.getAttribute('innerText');
+
+                    if(i>=1){
+                        console_(`${await li_menuArray[j].getAttribute('innerHTML')}`,'MG');
+                    }
+                    console_(`Currnet Text ${currentText}`,"RED");
+
+                    if(currentText===searchMenuText){
+                        // a Tags
+                        // let clickTarget = await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'));
+
+                        let clickTarget = await this.driver.wait(
+                            until.elementIsVisible(await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'))
+                            ,3000)
+                        );
+                        if(this.lnbMenuText===currentText && i===j){break;}
+                        this.lnbMenuText=currentText;
+                        if(i!==(menuTextLength-1)){
+                              console.log(`ul 태그 삽입 ${currentAttrText}`);
+                              this.currlnbMenu = await li_menuArray[j].findElement(By.css('ul')) 
+                        }
+                        if(i===(menuTextLength-1)){
+                            returnflag = true;
+                        }
+                        this.currlnbMenuText = currentAttrText;
+
+                        let liClassNames = await li_menuArray[j].getAttribute('class');
+                        if(liClassNames.split(' ').includes('active')){
+                            console.log(`not Clicked ${liClassNames} + ${currentText} `);
+                            break;
+
+                        }
+                        else{
+                            console_(`lnbMenu Clicked ${currentText}`,"GREEN");
+                            await clickTarget.click();
+                            break;
+                        }   
+                    }
+            }
+        }
+            return returnflag;
+          
         }
         catch(err){
             console.error(err);
+            return false;
         }
+        //  this.isIE()
+        // await this.driver.actions({bridge:true})
+        // .move({x:10,y:10,origin:clickTarget})
+        // .click()
+        // .perform();
 }
 
 
@@ -609,7 +687,7 @@ topqa.prototype.tableViewRowContextMenu = async function(_id,_columnIndex,_rowIn
         let count = _count || 1;
         let running = _running || false;
         if(!id){return;}
-        await this.tableViewRowClick(_id,_columnIndex,_rowIndex,_count,_running,'context');
+        await this.tableViewRowClick(_id,_columnIndex,_rowIndex,_count,_running,'CONTEXT');
     }
     catch(err){console.error(err);}
 };
@@ -621,7 +699,7 @@ topqa.prototype.tableViewRowDblClick = async function(_id,_columnIndex,_rowIndex
         let running = _running || false;
         if(!id){return;}
      try{   
-        await this.tableViewRowClick(_id,_columnIndex,_rowIndex,_count,_running,true);
+        await this.tableViewRowClick(_id,_columnIndex,_rowIndex,_count,_running,"DOUBLECLICK");
     }
     catch(err){console.log("[tableViewRowDblClick]  " ,err)}
     finally{
@@ -647,17 +725,27 @@ topqa.prototype.tableViewRowClick = async function(_id,_columnIndex,_rowIndex,_c
         // [1] 로 처리 하면 해결되지만
         // TableView의 구조를 확인시  odd와 even 이 있을시 사용하는 body 테이블임이 확인됨
 
+        // 구조 변경으로 인해 odd와 even 같은 클래스 네임으로 비교하는건 무의미 해졌음 
             if(tbody.length >1){
                 for(let i=0;i<tbody.length;i++){
-                    let firstChild = await tbody[i].findElement(By.css('tr'));
-                    let elementClassName = await firstChild.getAttribute('class');
-                    let isUseBody = elementClassName.split(' ').includes('odd','even');
+                    // let elementClassName = await firstRow.getAttribute('class');
+                    // let isUseBody = elementClassName.split(' ').includes('odd') ||
+                    //                 elementClassName.split(' ').includes('even') 
+                    let firstRow = await tbody[i].findElement(By.css('tr'));
+                    let isUseBody= await firstRow.getAttribute('childElementCount') >=1 ? true :false;
                     if(!!isUseBody){
                         tbody  = tbody[i];
                         break;
                     }
                 }
             }
+        /* includes에 대한 착각 
+            arr.includes('odd','even'); 는 arr안에 odd나 even이 있는지 판별하는게아니라
+            ,로 들어가면 두번째 인자가 fromIndex가된다. 그래서 아래와 같이 변경 
+            elementClassName.split(' ').includes('odd') ||
+            elementClassName.split(' ').includes('even') 
+         * 
+         */  
             
             let totalRowArray = await tbody.findElements(By.css('tr'));
 
@@ -680,23 +768,38 @@ topqa.prototype.tableViewRowClick = async function(_id,_columnIndex,_rowIndex,_c
         // 0, 0 으로 지정됨 startIdx가 2가 나옴 (첫번째 row및 column 을 클릭 )
 
         let selectRow = await totalRowArray[rowIndex].findElements(By.css('td'));
-        
         let clickTarget = selectRow[columnIndex+startIdx];
 
-        if(dblClick ==='context'){
-            console.log('Context Click');
+
+        switch(dblClick){
+            case 'CONTEXT':
+                await this.driver.actions({bridge:true}).contextClick(clickTarget).perform();
+            break;
+            // double click 
+            case "DOUBLECLICK":
+                await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
+            break;
+
+            default:
+                await clickTarget.click();
+            break;
+
+        }
+        // if(dblClick ==='context'){
+        //     console.log('Context Click');
+            // await this.driver.actions({bridge:true}).contextClick(clickTarget).perform();
 
             // Context Click 코드 
            // await this.driver.actions({bridge:true}).click(clickTarget,Button.RIGHT).perform();
-         await this.driver.actions({bridge:true}).contextClick(clickTarget).perform();
-        }
-        else if(!dblClick){
-                await selectRow[columnIndex+startIdx].click();
-        }
-        else{
-            // 더블 클릭 코드 
-            await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
-        }
+         
+        // }
+        // else if(!dblClick){
+        //     await clickTarget.click();
+        // }
+        // else{
+        //     // 더블 클릭 코드 
+        //     await this.driver.actions({bridge:true}).doubleClick(clickTarget).perform();
+        // }
 
         }
         catch(err){console.log("[tableViewRowClick] : ",err)}
@@ -719,7 +822,8 @@ topqa.prototype.regressionListViewIteratorClick = async function(){
 };
 
 topqa.prototype.cssDisplay = async function(selector,waitTime){
-    let maxWaitTime = waitTime || 2000;
+    let browserLazy = targetBrowser ==='ie' ? 5 : 1;
+    let maxWaitTime =  waitTime *browserLazy || 4000 * browserLazy;
     try{
         let target;
         target = await this.driver.wait(until.elementLocated(By.css(selector)),maxWaitTime);
@@ -733,10 +837,12 @@ topqa.prototype.cssDisplay = async function(selector,waitTime){
 };
 // Top.js is ID Based Element 
 topqa.prototype.isDisplayDOM = async function(selector,waitTime){
+    // let browserLazy = targetBrowser ==='ie' ? 5 : 1;
+    // let maxWaitTime =  waitTime *browserLazy || 10000 * browserLazy;
     let maxWaitTime = waitTime || 4000;
     try{
-        let target;
-        target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
+        
+        let target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
         return await target;
     }   
     catch(err){
@@ -746,7 +852,57 @@ topqa.prototype.isDisplayDOM = async function(selector,waitTime){
     }
 }; // isDisplayDOM
 
+topqa.prototype.qaConsole = function (message,type){
+    try{
+        let colorConfig = {
+            Reset : "\x1b[0m",
+            Bright : "\x1b[1m",
+            Dim : "\x1b[2m",
+            Underscore : "\x1b[4m",
+            Blink : "\x1b[5m",
+            Reverse : "\x1b[7m",
+            Hidden : "\x1b[8m",
+            FgBlack : "\x1b[30m",
+            FgRed : "\x1b[31m",
+            FgGreen : "\x1b[32m",
+            FgYellow : "\x1b[33m",
+            FgBlue : "\x1b[34m",
+            FgMagenta : "\x1b[35m",
+            FgCyan : "\x1b[36m",
+            FgWhite : "\x1b[37m",
+            BgBlack : "\x1b[40m",
+            BgRed : "\x1b[41m",
+            BgGreen : "\x1b[42m",
+            BgYellow : "\x1b[43m",
+            BgBlue : "\x1b[44m",
+            BgMagenta : "\x1b[45m",
+            BgCyan : "\x1b[46m",
+            BgWhite : "\x1b[47m",
+        }
+        // .toUpperCase()
+        switch(type){
+                case 'RED':
+                    console.log(`${colorConfig["FgRed"]}%s\x1b[0m`,message);
+                break;
+                case 'GREEN':
+                    console.log(`${colorConfig["FgGreen"]}%s\x1b[0m`,message);
+                break;
+                case 'MG':
+                    console.log(`${colorConfig["FgMagenta"]}%s\x1b[0m`,message);
+                break;
 
+                default:
+                    console.log('\x1b[33m%s\x1b[0m', message);  //yellow
+                break;
+        }
+    }
+    catch(err){
+        console.error(err);
+    }
+    
+
+
+}
 topqa.prototype.userWait = async function(waitTime){
     try{
         console.log(`Wait Time ............ {${waitTime/1000} 초}`);
@@ -782,7 +938,7 @@ topqa.prototype.createJunitReport = async function(){
 topqa.prototype.createExcelReport = async function(){
     try{
         const retVal = await this.driver.executeScript('return factory.report()');
-        makeExcelReport(retVal);
+        makeExcelReport(retVal,targetBrowser);
         await this.driver.sleep(2000);
     }
     catch(err){
@@ -825,7 +981,12 @@ topqa.prototype.topButtonClick = async function(_id,_dblClick){
         let dblClick = _dblClick| false;
         if(!id){return;}
     
-        let topElement = this.driver.findElement(By.id(id));
+        // let topElement = await this.driver.wait(
+        //     until.elementIsVisible(this.driver.findElement(By.id(id)) ,5000)
+        // );
+        let topElement = await this.isDisplayDOM(id);
+
+        // let topElement = this.driver.findElement(By.id(id));
         let targetElement = await topElement.findElement(By.css('.top-button-root'));
         
         

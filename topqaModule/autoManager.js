@@ -161,12 +161,17 @@ console.log('Chrome Start');
     }
     catch(err){
             console.error('driver init Error');
-           console.error(err);
+            console.error(err);
+            process.exit(1); 
+        // create session 에러
+        // 이런 에러는 대부분 브라우저가 뜨지 않았을 경우가 많음
 
         // node Exit 
-        process.exit(1);
+        await this.driver.close();
+        await this.driver.quit();
+       
 
-            return false;
+       return false;
     }
 };
 
@@ -238,13 +243,14 @@ topqa.prototype.lnbOpen = async function(menuText){
             }
             if(!this.lnbMenuRoot){
                 console.log('lnbMenuRoot find');
-                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',25000);
+                this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',20000);
             }
            
         console.log(menuText);
         let console_ = this.qaConsole;
         let menuTextLength = menuText.length;
         let returnflag = false;
+        this.currlnbMenu="";
         for(let i=0;i<menuTextLength;i++){
             let searchMenuText = menuText[i];
             if(searchMenuText===''){continue;}
@@ -255,7 +261,8 @@ topqa.prototype.lnbOpen = async function(menuText){
             if(this.currlnbMenu!==""  &&  this.currlnbMenu!=="undefined"){
                 // li_selectIterator = 'ul[style="display: block;"] > li';
                 console.log(await this.currlnbMenu.getTagName());               
-                li_selectIterator = i===1 ? "li[class~=top-menu_collapsed]" : 'li';
+                // li_selectIterator = i===1 ? "li[class~=top-menu_collapsed]" : 'li';
+                li_selectIterator = i===1 ? "li[class~=depth2]" : 'li';
                 li_menuArray = await this.currlnbMenu.findElements(By.css(li_selectIterator));
             }
             else{
@@ -263,12 +270,10 @@ topqa.prototype.lnbOpen = async function(menuText){
                 li_menuArray = await this.lnbMenuRoot.findElements(By.css(li_selectIterator));
             }
 
-            console_(`Search Text   ${searchMenuText}`);
-            if(li_menuArray.lnegth===0){console.log(`길이가 0입니다.${li_selectIterator}`)}
-            console_(`menuLnegth ${li_menuArray.length}`);
-            console.log(li_selectIterator);
+            console_(`Search Text   ${searchMenuText}\t
+            ChildNodelength  : ${li_menuArray.length}\t
+            Selector -> : ${li_selectIterator}`);
 
-           
             let li_menuArrayLength = li_menuArray.length;
             for(let j=0;j<li_menuArrayLength;j++){
                     
@@ -276,11 +281,14 @@ topqa.prototype.lnbOpen = async function(menuText){
                     // let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
                     let textElement = await this.driver.wait(
                         until.elementIsVisible(await li_menuArray[j].findElement(By.css('.top-menu_text'))
-                        ,3000)
+                        ),
+                        3000
+                      
                     );
                     let currentText = await textElement.getText();
-                    let currentAttrText = await textElement.getAttribute('innerText');
-
+                                // getText()
+                                
+                                // getAttribute('text');
                     if(i>=1){
                         console_(`${await li_menuArray[j].getAttribute('innerHTML')}`,'MG');
                     }
@@ -292,28 +300,38 @@ topqa.prototype.lnbOpen = async function(menuText){
 
                         let clickTarget = await this.driver.wait(
                             until.elementIsVisible(await li_menuArray[j].findElement(By.css('a.top-menu_item_inner'))
-                            ,3000)
+                            ,5000)
                         );
-                        if(this.lnbMenuText===currentText && i===j){break;}
+                        console_(`clickTarget Text Test ${await clickTarget.getAttribute('text')} `,'TEST');
+                        
                         this.lnbMenuText=currentText;
                         if(i!==(menuTextLength-1)){
-                              console.log(`ul 태그 삽입 ${currentAttrText}`);
+                              console.log(`ul 태그 삽입 ${currentText}`);
                               this.currlnbMenu = await li_menuArray[j].findElement(By.css('ul')) 
                         }
-                        if(i===(menuTextLength-1)){
-                            returnflag = true;
-                        }
-                        this.currlnbMenuText = currentAttrText;
-
+                        
                         let liClassNames = await li_menuArray[j].getAttribute('class');
-                        if(liClassNames.split(' ').includes('active')){
-                            console.log(`not Clicked ${liClassNames} + ${currentText} `);
+
+                        // 1depth 는 active 유무 
+                        // 2depth 는 top-menu_open (열렸을시)
+                        //           top-menu_collapsed(닫혔을시)
+                        if(liClassNames.split(' ').includes('active')  ||
+                            liClassNames.split(' ').includes('top-menu_open')
+                        ){
+                            console.log(`not Clicked ${liClassNames}  searchText ${currentText} `);
                             break;
 
                         }
                         else{
                             console_(`lnbMenu Clicked ${currentText}`,"GREEN");
+
+
+                            if(currentText==="Container")   break;
+
                             await clickTarget.click();
+
+                            if(i===(menuTextLength-1)){returnflag = true;}
+
                             break;
                         }   
                     }
@@ -500,12 +518,20 @@ topqa.prototype.lnbMenuSelect = async function(lnbMenuText){
     }
 };
 topqa.prototype.gnbMenuSelect = async function(spec){
-    let selectList = this._selectList;
-    console.log("this Spec  : ",spec);
+   
     try{
-        console.log("ID Check   :  " + selectList[spec]);
+        
         // let moveBtn = await this.driver.findElement(By.id(selectList[spec]));
-        let moveBtn = await this.isDisplayDOM(selectList[spec],8000);
+        // let moveBtn = await this.isDisplayDOM(selectList[spec],8000);
+       
+        let _id = this._selectList[spec];
+        this.qaConsole(`this GNB Menu Select  : ${_id} `,)
+        let moveBtn = await this.driver.wait(
+            until.elementIsVisible(this.driver.findElement(By.id(_id))
+            ,5000
+            ))
+
+
         await moveBtn.click();
     }
     catch(err){
@@ -839,7 +865,7 @@ topqa.prototype.cssDisplay = async function(selector,waitTime){
 topqa.prototype.isDisplayDOM = async function(selector,waitTime){
     // let browserLazy = targetBrowser ==='ie' ? 5 : 1;
     // let maxWaitTime =  waitTime *browserLazy || 10000 * browserLazy;
-    let maxWaitTime = waitTime || 4000;
+    let maxWaitTime = waitTime || 7000;
     try{
         
         let target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
@@ -890,7 +916,12 @@ topqa.prototype.qaConsole = function (message,type){
                 case 'MG':
                     console.log(`${colorConfig["FgMagenta"]}%s\x1b[0m`,message);
                 break;
-
+                case 'CY':
+                    console.log(`${colorConfig["FgCyan"]}%s\x1b[0m`,message);
+                    break;
+                case 'TEST':
+                     console.log(`${colorConfig["FgBlue"]}%s\x1b[0m`,message);
+                    break;
                 default:
                     console.log('\x1b[33m%s\x1b[0m', message);  //yellow
                 break;

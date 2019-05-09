@@ -164,9 +164,16 @@ var commonStatus = {
         await osqa.textFieldClick(textfield_event_test_2);
         await osqa.textFieldDblClick(textfield_event_test_2);
 
+        // Copy And Paste 
+        await osqa.textFieldStringCopyandPaste(textfield_event_test_2);
+
+
         await osqa.userWait(2500);
       }
-      // on copy 랑 on paste 동작 테스트 해야댐
+      
+
+
+
 
       flag = await osqa.lnbOpen(["Text", "TextField", "텍스트필드 API 테스트"]);
       console.log(`API 테스트 플래그 ${flag}`);
@@ -188,20 +195,17 @@ var commonStatus = {
     run: async () => {
       await osqa.lnbOpen(["Text", "TextArea", "텍스트에어리어 이벤트 테스트"]);
 
-      let textarea_event_target = "";
+      let textarea_event_target = "textarea_event_targetButton";
 
-      // 작성해야 할 이벤트 리스트
-      /*
-             on-keypressed
-             on-keyreleased
-             on-focus
-             on-focuslost
-            */
 
-      // on copy  on paste 코드 작성 요망
+      await osqa.topTextAreaClick(textarea_event_target);
+      await osqa.topTextAreaDblClick(textarea_event_target);
 
-      // 작성 후 이 코멘트 제거
+      await osqa.topTextAreaInput(textarea_event_target,"입력간드아");
+      
+      await osqa.topTextAreaStringCopyandPaste(textarea_event_target);
 
+  
       await osqa.lnbOpen(["Text", "TextArea", "텍스트에어리어 API 테스트"]);
       let textArea_api_target = "textarea_api_targetButton";
       await osqa.topButtonClick(textArea_api_target);
@@ -210,7 +214,6 @@ var commonStatus = {
       // blur APO call
       await osqa.execute('Top.Dom.selectById("textAreaFocusBlur").focus();');
       await osqa.execute('Top.Dom.selectById("textAreaFocusBlur").blur();');
-
 
       // sync for factory
       await osqa.execute('return Auto.syncFactory("textarea")');
@@ -227,36 +230,6 @@ var commonStatus = {
       // iterator ListView
     }
   },
-
-  // Not Use
-  // reFactoring
-  tableview_2: {
-    status: false,
-    testCase: [],
-    actionfilter: {},
-    run: async () => {
-      try {
-        const targetTableViewId = "auto_tableview";
-        osqa.reset();
-        // set Located Table Page
-        await osqa.gnbMenuSelect("automation");
-        await osqa.lnbMenuSelect("Container");
-        await osqa.subMenuSelect("TableView");
- 
-        // set Located Table Page
-        if (await osqa.isDisplayDOM(targetTableViewId)) {
-          await osqa.tableViewHeaderClick(targetTableViewId);
-          await osqa.tableViewRowClick(targetTableViewId);
-          await osqa.tableViewRowDblClick(targetTableViewId);
-        }
-
-        /* 테스트 코드 factory 에 submit */
-        await osqa.testSubmit();
-      } catch (err) {
-        console.warn("tableview : Run Error");
-      }
-    }
-  }
 };
 /**
  * @param {object} testContent
@@ -287,7 +260,7 @@ exports.start = async function() {
     osqa = new topqa();
     osqa.init();
 
-    // commonStatusOtherFalse(["tableview"]);
+    commonStatusOtherFalse(["textarea"]);
 
     let length = Object.keys(commonStatus).length;
     let commonStatusKeyArr = Object.keys(commonStatus);

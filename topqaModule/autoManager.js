@@ -85,7 +85,7 @@ function topqa(){
 
     // 시연 url
 
-    
+    this.copyFlag = false;
 
     // tableview test  Session Created Error 
     this._url = 'http://127.0.0.1:5279/topqa/index.html#!/automation';
@@ -174,6 +174,24 @@ console.log('Chrome Start');
        return false;
     }
 };
+topqa.prototype.textFieldStringCopyandPaste = async function(_id){
+    try {
+        let id = _id || false;
+        if(!id){throw new Error('textfieldStringCopyand Paste is Not Exist id')}
+        
+        let textFieldEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textFieldEle.findElement(By.css('input.top-textfield-text'));
+        
+        await this.driver.executeScript('arguments[0].focus();',targetElement);
+        await this.targetElement.sendKeys(Key.CONTROL,'a','c','v');
+
+    } catch (error) {
+            console.error(err);
+    }
+    finally{
+            console.warn('textfieldStringCopy and Paste ');
+    }
+}
 
 topqa.prototype.textFieldInput = async function(_id,_input){
     try{
@@ -224,6 +242,149 @@ topqa.prototype.textFieldClick = async function(_id,_dblClick){
     }
 }
 
+
+topqa.prototype.topTextAreaClick = async function(_id,_dblClick){
+    try{
+        let id = _id || false;
+        let dblClick = _dblClick | false;
+        if(!id){return;}
+
+        let textAreaEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textAreaEle.findElement(By.css('textarea'));
+
+        if(!!dblClick){
+            await this.driver.actions({bridge:true})
+            .doubleClick(targetElement)
+            .perform();
+        }else{
+            await targetElement.click();
+        }
+
+    }
+    catch(err){console.error(err)}
+    finally{
+        let consoleOut = !!_dblClick ? 'textArea DbClick' :'textArea Click';
+        console.log(`${consoleOut}  ${_id}`);
+    }
+}
+
+topqa.prototype.topTextAreaDblClick = async function(_id){
+    try{
+        let id = _id || false;
+        if(!id){return;}
+        this.topTextAreaClick(_id,true);
+    }
+    catch(err){console.error(err);}
+}
+
+topqa.prototype.topTextAreaInput = async function(_id,_input){
+        try{
+            let id = _id || false;
+            if(!id){return;}
+            let input = _input || 'Input Sample';
+
+            let textAreaEle = await this.driver.findElement(By.id(id));
+            let inputElement = await textAreaEle.findElement(By.css('textarea'));
+
+            await this.driver.executeScript('arguments[0].focus();',inputElement);
+            await inputElement.sendKeys(input);
+            
+        }
+        catch(err){console.error(err);}
+}
+topqa.prototype.topTextAreaStringCopyandPaste = async function(_id){
+    try {
+        let id = _id || false;
+        if(!id){throw new Error('Not Exist ID topTextAreaStringCopyandPaste');}
+
+        let textAreaEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textAreaEle.findElement(By.css('textarea'));
+
+        // focus in Textarea
+        await this.driver.executeScript('arguments[0].focus();',targetElement);
+
+        // all Select -> Copy - > Paste 
+        await targetElement.sendKeys(Key.CONTROL,'a','c','v');
+
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+    finally{
+        console.log(`topTextAreaStringCopyandPaste`);
+    }
+
+}
+// only Copy
+topqa.prototype.topTextAreaStringCopy = async function(_id){
+    try {
+        let id = _id || false;
+        if(!id){throw new Error('Not Exist ID topTextAreaStringCopy');}
+
+        let textAreaEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textAreaEle.findElement(By.css('textarea'));
+
+        this.copyFlag = true;
+
+         // focus in Textarea
+        await this.driver.executeScript('arguments[0].focus();',targetElement);
+        // Copy 
+        await targetElement.sendKeys(Key.CONTROL,'a','c')
+        
+
+        // // Create All Select Actions
+        // await this.driver.actions({bridge:true})
+        // .keyDown(Key.CONTROL)
+        // .keyDown(Key.A)
+        // .press()
+        // .perform();
+
+        // // Create Copy Actions
+        // await this.driver.actions({bridge:true})
+        // .keyDown(Key.CONTROL)
+        // .keyDown(C)
+        // .press()
+        // .perform();
+
+        // Complete 
+
+
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+    finally{
+        console.log(`topTextArea String Copy `);
+    }
+
+}
+
+// Only String Paste 
+topqa.prototype.topTextAreaStringPaste = async function(_id){
+    try {
+        let id = _id || false;
+        if(!id){throw new Error('Not Exist ID topTextAreaStringPaste');}
+
+        let textAreaEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textAreaEle.findElement(By.css('textarea'));
+
+        // focus in Textarea
+        await this.driver.executeScript('arguments[0].focus();',targetElement);
+
+        // true 이면 Ctrl + A  Skip
+        !!this.copyFlag ? await targetElement.sendKeys(Key.CONTROL,'v'):
+        await targetElement.sendKeys(Key.CONTROL,'a','c','v');
+
+        this.copyFlag = false;
+
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+    finally{
+        console.log(`topTextArea String Copy `);
+    }
+}
 topqa.prototype.getDriver = function(){
     return  typeof this.driver ==='undefined' ? false : this.driver;
 };
@@ -282,8 +443,7 @@ topqa.prototype.lnbOpen = async function(menuText){
                     let textElement = await this.driver.wait(
                         until.elementIsVisible(await li_menuArray[j].findElement(By.css('.top-menu_text'))
                         ),
-                        3000
-                      
+                        5000
                     );
                     let currentText = await textElement.getText();
                                 // getText()
@@ -325,13 +485,9 @@ topqa.prototype.lnbOpen = async function(menuText){
                         else{
                             console_(`lnbMenu Clicked ${currentText}`,"GREEN");
 
-
-                            if(currentText==="Container")   break;
-
+                            // if(currentText==="Container")   break;
                             await clickTarget.click();
-
                             if(i===(menuTextLength-1)){returnflag = true;}
-
                             break;
                         }   
                     }
@@ -365,7 +521,7 @@ topqa.prototype.tableViewScrollDrag = async function(css){
             .move({x:0,y:100,origin:Origin.POINTER})
             .release()
             .perform();
-        // await this.driver.actions({brdige:true}).dragAndDrop(scroll).perform();
+        
         
 
 // 02 버전 
@@ -528,7 +684,7 @@ topqa.prototype.gnbMenuSelect = async function(spec){
         this.qaConsole(`this GNB Menu Select  : ${_id} `,)
         let moveBtn = await this.driver.wait(
             until.elementIsVisible(this.driver.findElement(By.id(_id))
-            ,5000
+            ,15000
             ))
 
 
@@ -867,7 +1023,6 @@ topqa.prototype.isDisplayDOM = async function(selector,waitTime){
     // let maxWaitTime =  waitTime *browserLazy || 10000 * browserLazy;
     let maxWaitTime = waitTime || 7000;
     try{
-        
         let target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
         return await target;
     }   

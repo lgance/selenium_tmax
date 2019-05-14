@@ -40,6 +40,13 @@ const targetBrowser = !process.argv[2]
     ? process.argv[2].toLowerCase() 
     : 'chrome');
 // module exports and topqa 
+
+function topqaWait(timeout){
+        return new Promise(resolve => setTimeout(resolve,timeout))
+}
+
+
+
 module.exports = topqa;
 
 // lazy loading
@@ -63,6 +70,11 @@ function topqa(){
 
     // 현재 페이지가 없으면 안됨;
     this.currTestPage;
+
+    // 프로젝트 타이틀 ( driver waiting )
+    this.projectTitle="topMainWindow";
+
+
     // topLNB Menu
 
 
@@ -119,7 +131,7 @@ topqa.prototype.init = async function(){
     if(targetBrowser==='chrome'){
 //  WebDriverError: unknown error: DevToolsActivePort file doesn't exist
 //  Issue Chrome 66 Update 로 인해서 DevtoolsActivePort 를 찾지 못하는 에러가 발생 
-console.log('Chrome Start');
+    console.log('Chrome Start');
         var chromeCapa = webdriver.Capabilities.chrome();
         var chromeOptions = {
             'args':[
@@ -135,12 +147,9 @@ console.log('Chrome Start');
 
         // this.driver = chrome.Driver.createSession(new chrome.Options(),
         // new chrome.ServiceBuilder(path).build());
-    
-
     }
     else if(targetBrowser==='ie'){
-        // const Capabilities = require('selenium-webdriver/lib/capabilities').Capabilities;
-        // let capa = Capabilities.ie();
+        console.log("IE Start");
         var ieCapa = webdriver.Capabilities.ie();
         var ieOptions = {
 
@@ -149,15 +158,16 @@ console.log('Chrome Start');
         .withCapabilities(ieCapa)
         .build();
     }
-// with Capabilities는 this.capabilities_ 를 한다
+            // with Capabilities는 this.capabilities_ 를 한다
    
-        //    driver = await driver.build();
             await this.driver.get(this._url);
-            // await this.driver.wait(until.titleIs('topMainWindow'),115000);
             await this.driver.manage().window().maximize();
 
-        // title topMainWindow
-            // await driver.findElement(By.id('autoBtn')).click();;
+            await this.driver.wait(until.titleIs(this.projectTitle),5000);
+
+            topqaWait(5000).then(()=>{
+                console.log('Code Start');
+            });
     }
     catch(err){
             console.error('driver init Error');
@@ -174,6 +184,39 @@ console.log('Chrome Start');
        return false;
     }
 };
+topqa.prototype.topTextViewDblclick = async function(_id){
+    try {
+        let id = _id || false;
+        if(!id){return;}
+        this.topTextViewClick(_id,true);
+    } catch (error) {
+        console.error(error);
+    }
+    finally{
+        console.log(`textview Dblclick ${_id}`);
+    }
+}
+topqa.prototype.topTextViewClick = async function(_id,_dblclick){
+    try {
+        let id = _id || false;
+        let dblClick = _dblclick | false;
+        if(!id){throw new Error('textview Click is Not Exist id')}
+
+        let textviewEle = await this.driver.findElement(By.id(id));
+        let targetElement = await textviewEle.findElement(By.css('.top-textview-root'));
+
+        if(!!_dblclick){
+            await this.driver.actions({bridge:true})
+            .doubleClick(targetElement)
+            .perform();
+        }else{
+           await targetElement.click();
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+}
 topqa.prototype.textFieldStringCopyandPaste = async function(_id){
     try {
         let id = _id || false;
@@ -183,10 +226,11 @@ topqa.prototype.textFieldStringCopyandPaste = async function(_id){
         let targetElement = await textFieldEle.findElement(By.css('input.top-textfield-text'));
         
         await this.driver.executeScript('arguments[0].focus();',targetElement);
-        await this.targetElement.sendKeys(Key.CONTROL,'a','c','v');
+
+        await targetElement.sendKeys(Key.CONTROL,'a','c','v');
 
     } catch (error) {
-            console.error(err);
+            console.error(error);
     }
     finally{
             console.warn('textfieldStringCopy and Paste ');
@@ -682,13 +726,23 @@ topqa.prototype.gnbMenuSelect = async function(spec){
        
         let _id = this._selectList[spec];
         this.qaConsole(`this GNB Menu Select  : ${_id} `,)
-        let moveBtn = await this.driver.wait(
-            until.elementIsVisible(this.driver.findElement(By.id(_id))
-            ,15000
-            ))
+        
+
+        let waitButton = await this.driver.wait(
+            until.elementIsVisible(await this.driver.findElement(By.id(_id)))
+        )
+        let gnbButton = await waitButton.findElement(By.css('.top-button-root'));
+        await gnbButton.click();
 
 
-        await moveBtn.click();
+
+
+        // let rootButton = await this.driver.findElement(By.id(_id));
+        // let gnbButton = await this.driver.wait(
+        //         // until.elementIsVisible(await rootButton.findElement(By.css('.top-button-root')),15000)
+        //         until.elementLocated(await rootButton.findElement(By.id(_id)))
+        // )
+        // await gnbButton.click();
     }
     catch(err){
         console.error("[gnbMenuSelect Function Error] >>> " + err);

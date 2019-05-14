@@ -11,6 +11,7 @@ var commonStatus = {
     name: "api",
     run: async () => {
       try {
+      
         // this is Wait Trick
         await osqa.gnbMenuSelect("api");
         await osqa.gnbMenuSelect("automation");
@@ -124,6 +125,14 @@ var commonStatus = {
       await osqa.userWait(1000);
       await osqa.topButtonDblClick(eventBtn_1);
       await osqa.userWait(1000);
+
+
+      await osqa.lnbOpen(["Button", "Button", "버튼 API 테스트"]);
+
+      // api 테스트 버튼 클릭 코드  필요 작성 후 코멘트 제거 
+
+      // Button21 
+
       await osqa.execute('return Auto.syncFactory("button")');
     }
   },
@@ -131,6 +140,33 @@ var commonStatus = {
     status: true,
     run: async () => {
       await osqa.lnbOpen(["Controls", "Spinner", "스피너 이벤트 테스트"]);
+    }
+  },
+
+  textview:{
+    status:true,
+    run:async ()=>{
+        await osqa.lnbOpen([
+          "Text",
+          "TextView",
+          "텍스트뷰 이벤트 테스트"
+        ]);
+
+        const textview_event_test_target="textview_event_test_target";
+      
+
+        await osqa.topTextViewClick(textview_event_test_target);
+        await osqa.topTextViewDblclick(textview_event_test_target);
+
+        await osqa.lnbOpen([
+          "Text",
+          "TextView",
+          "텍스트뷰 API 테스트"
+        ]);
+
+        let textView_api_test_ = "textView_api_test_";
+        await osqa.topButtonClick(textView_api_test_);
+        await osqa.execute('Auto.syncFactory("textview");');
     }
   },
   textfield: {
@@ -167,13 +203,11 @@ var commonStatus = {
         // Copy And Paste 
         await osqa.textFieldStringCopyandPaste(textfield_event_test_2);
 
-
         await osqa.userWait(2500);
+
+        console.log(await osqa.execute('return Auto.get("textfield","event")'));
       }
       
-
-
-
 
       flag = await osqa.lnbOpen(["Text", "TextField", "텍스트필드 API 테스트"]);
       console.log(`API 테스트 플래그 ${flag}`);
@@ -258,9 +292,9 @@ exports.start = async function() {
   // driver initilalize
   try {
     osqa = new topqa();
-    osqa.init();
+    await osqa.init();
 
-    commonStatusOtherFalse(["textarea"]);
+    commonStatusOtherFalse(["textview"]);
 
     let length = Object.keys(commonStatus).length;
     let commonStatusKeyArr = Object.keys(commonStatus);

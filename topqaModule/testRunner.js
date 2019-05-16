@@ -2,8 +2,16 @@ const topqa = require("./autoManager");
 
 const { Key, Origin, Button } = require("selenium-webdriver/lib/input");
 
-var osqa;
 
+const { LinearLayoutTestRunner }  = require('./ExternalTestRunner/linearlayoutTestRunner');
+const { FoldingLayoutTestRunner } = require('./ExternalTestRunner/foldinglayoutTestRunner');
+
+// foldinglayout, linearlayout external TestCode
+
+
+
+
+var osqa;
 var globalDriver;
 var commonStatus = {
   api: {
@@ -19,6 +27,30 @@ var commonStatus = {
       } catch (err) {
         console.error(err);
       }
+    }
+  },
+  // soo 
+  linearlayout:{
+    status:true,
+    name:"linearlayout",
+    run:async () =>{
+      // linearlayout Test Code 
+      LinearLayoutTestRunner.run();
+      
+      // adding TestCase Repo
+      await osqa.execute('return Auto.syncFactory("linearlayout")');
+    }
+  },
+  // "dong"
+  foldinglayout:{
+    status:true,
+    name:"foldinglayout",
+    run:async () =>{
+        // foldinglayout Test Code 
+        FoldingLayoutTestRunner.run();
+
+        // adding TestCase Repo
+        await osqa.execute('return Auto.syncFactory("foldinglayout")');
     }
   },
   radiobutton: {
@@ -294,7 +326,7 @@ exports.start = async function() {
     osqa = new topqa();
     await osqa.init();
 
-    commonStatusOtherFalse(["textview"]);
+    // commonStatusOtherFalse(["textview"]);
 
     let length = Object.keys(commonStatus).length;
     let commonStatusKeyArr = Object.keys(commonStatus);

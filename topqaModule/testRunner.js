@@ -2,14 +2,10 @@ const topqa = require("./autoManager");
 
 const { Key, Origin, Button } = require("selenium-webdriver/lib/input");
 
-
 const { LinearLayoutTestRunner }  = require('./ExternalTestRunner/linearlayoutTestRunner');
 const { FoldingLayoutTestRunner } = require('./ExternalTestRunner/foldinglayoutTestRunner');
 
 // foldinglayout, linearlayout external TestCode
-
-
-
 
 var osqa;
 var globalDriver;
@@ -34,11 +30,16 @@ var commonStatus = {
     status:true,
     name:"linearlayout",
     run:async () =>{
-      // linearlayout Test Code 
-      LinearLayoutTestRunner.run();
-      
-      // adding TestCase Repo
-      await osqa.execute('return Auto.syncFactory("linearlayout")');
+      // Event Test
+        await osqa.lnbOpen(["Layout","LinearLayout","리니어레이아웃 이벤트"]);
+        await LinearLayoutTestRunner.linearlayoutEventTestRun();
+
+      // API Test
+        await osqa.lnbOpen(["Layout","LinearLayout","리니어레이아웃 API"]);
+        await LinearLayoutTestRunner.linearlayoutAPITestRun();
+
+      // Test Complete push in Factory Module
+        await osqa.execute('return Auto.syncFactory("linearlayout")');
     }
   },
   // "dong"
@@ -46,10 +47,18 @@ var commonStatus = {
     status:true,
     name:"foldinglayout",
     run:async () =>{
-        // foldinglayout Test Code 
-        FoldingLayoutTestRunner.run();
 
-        // adding TestCase Repo
+      // Event Test
+        await osqa.lnbOpen(["Layout","FoldingLayout","폴딩레이아웃 이벤트"]);
+        await FoldingLayoutTestRunner.foldingEventTestRun();
+    
+
+      // API Test
+        await osqa.lnbOpen(["Layout","FoldingLayout","폴딩레이아웃 API"]);
+        await FoldingLayoutTestRunner.foldingAPITestRun();
+
+
+     // Test Complete push in Factory Module
         await osqa.execute('return Auto.syncFactory("foldinglayout")');
     }
   },
@@ -326,7 +335,8 @@ exports.start = async function() {
     osqa = new topqa();
     await osqa.init();
 
-    // commonStatusOtherFalse(["textview"]);
+    // test Lock
+    commonStatusOtherFalse(["linearlayout","foldinglayout"]);
 
     let length = Object.keys(commonStatus).length;
     let commonStatusKeyArr = Object.keys(commonStatus);

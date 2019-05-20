@@ -77,9 +77,6 @@ function topqa(){
 
     // topLNB Menu
 
-
-
-
     this.lnbMenuRoot;
     // 1 depth Web Element with Text
     this.currlnbMenu;
@@ -94,9 +91,6 @@ function topqa(){
     this.currentTestWidget ;
 
     /** basic loading */
-
-    // 시연 url
-
     this.copyFlag = false;
 
     // tableview test  Session Created Error 
@@ -104,12 +98,6 @@ function topqa(){
 
     // 버전 별 테이블 구조가 자꾸 바뀜 
     this._topVersion;
-
-
-    
-
-
-
 
 };
 topqa.prototype.reset = function(){

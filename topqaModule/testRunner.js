@@ -4,8 +4,10 @@ const { Key, Origin, Button } = require("selenium-webdriver/lib/input");
 
 const { LinearLayoutTestRunner }  = require('./ExternalTestRunner/linearlayoutTestRunner');
 const { FoldingLayoutTestRunner } = require('./ExternalTestRunner/foldinglayoutTestRunner');
-
+const { TabLayoutTestRunner}  = require('./ExternalTestRunner/tablayoutTestRunner');
 // foldinglayout, linearlayout external TestCode
+
+
 
 var osqa;
 var globalDriver;
@@ -23,6 +25,27 @@ var commonStatus = {
       } catch (err) {
         console.error(err);
       }
+    }
+  },
+  tablayout:{
+    status:true,
+    name:"tablayout",
+    run:async () =>{
+
+      // getCurrentDriver
+
+      let _driver = osqa.getDriver();
+      // Event Test
+        await osqa.lnbOpen(["Layout","TabLayout","탭 레이아웃 이벤트"]);
+        await TabLayoutTestRunner.tablayoutEventTestRun(_driver,osqa);
+
+      // API Test
+        await osqa.lnbOpen(["Layout","TabLayout","탭 레이아웃 API 테스트"]);
+        await TabLayoutTestRunner.tablayoutAPITestRun(_driver,osqa);
+
+      // Test Complete push in Factory Module
+        await osqa.execute('return Auto.syncFactory("tablayout")');
+
     }
   },
   // soo 
@@ -82,6 +105,7 @@ var commonStatus = {
     actionfilter: {},
     run: async () => {
       try {
+
         await osqa.lnbOpen(["Container", "TableView", "테이블 이벤트 테스트"]);
         // on-rowclic, on-rowdblclick, on-rowcontextmenu, on-pagechange,
         // on-rowcheck, on-headerclick , on-headerdblclick
@@ -96,6 +120,8 @@ var commonStatus = {
 
         // 미 동작 나중에 확인
         // await osqa.tableViewHeaderDblClick(eventTableView1);
+
+
 
         let eventTableView2 = "tableview_event_test_2";
         // onEdit Complete
@@ -159,6 +185,7 @@ var commonStatus = {
   button: {
     status: true,
     run: async () => {
+    
       await osqa.lnbOpen(["Button", "Button", "버튼 이벤트 테스트"]);
       let eventBtn_1 = "button_event_1_";
 
@@ -170,10 +197,9 @@ var commonStatus = {
 
       await osqa.lnbOpen(["Button", "Button", "버튼 API 테스트"]);
 
-      // api 테스트 버튼 클릭 코드  필요 작성 후 코멘트 제거 
-
-      // Button21 
-
+      let apiBtn_1 = "button_apiStart";
+      // API Start
+      await osqa.topButtonClick(apiBtn_1);
       await osqa.execute('return Auto.syncFactory("button")');
     }
   },
@@ -181,6 +207,11 @@ var commonStatus = {
     status: true,
     run: async () => {
       await osqa.lnbOpen(["Controls", "Spinner", "스피너 이벤트 테스트"]);
+
+      await osqa.lnbOpen(["Controls", "Spinner", "스피너 API 테스트"]);
+
+
+
     }
   },
 
@@ -246,7 +277,7 @@ var commonStatus = {
 
         await osqa.userWait(2500);
 
-        console.log(await osqa.execute('return Auto.get("textfield","event")'));
+          // console.log(await osqa.execute('return Auto.get("textfield","event")'));
       }
       
 
@@ -336,7 +367,7 @@ exports.start = async function() {
     await osqa.init();
 
     // test Lock
-    commonStatusOtherFalse(["linearlayout","foldinglayout"]);
+    // commonStatusOtherFalse(["tablayout"]);
 
     let length = Object.keys(commonStatus).length;
     let commonStatusKeyArr = Object.keys(commonStatus);

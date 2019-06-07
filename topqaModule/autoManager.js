@@ -438,7 +438,8 @@ topqa.prototype.lnbOpen = async function(menuText){
                 console.log('lnbMenuRoot find');
                 this.lnbMenuRoot = await this.isDisplayDOM('lnbMenu',20000);
             }
-           
+         
+            //  Button Button 
         console.log(menuText);
         let console_ = this.qaConsole;
         let menuTextLength = menuText.length;
@@ -474,8 +475,8 @@ topqa.prototype.lnbOpen = async function(menuText){
                     // let textElement = await li_menuArray[j].findElement(By.css('.top-menu_text'));
                     let textElement = await this.driver.wait(
                         until.elementIsVisible(await li_menuArray[j].findElement(By.css('.top-menu_text'))
-                        ),
-                        5000
+                        )
+                        // ,5000
                     );
                     let currentText = await textElement.getText();
                                 // getText()
@@ -512,11 +513,10 @@ topqa.prototype.lnbOpen = async function(menuText){
                         ){
                             console.log(`not Clicked ${liClassNames}  searchText ${currentText} `);
                             break;
-
                         }
                         else{
                             console_(`lnbMenu Clicked ${currentText}`,"GREEN");
-
+                            console.log(await clickTarget.getAttribute('innerHTML'))
                             // if(currentText==="Container")   break;
                             await clickTarget.click();
                             if(i===(menuTextLength-1)){returnflag = true;}
@@ -1063,7 +1063,7 @@ topqa.prototype.cssDisplay = async function(selector,waitTime){
 topqa.prototype.isDisplayDOM = async function(selector,waitTime){
     // let browserLazy = targetBrowser ==='ie' ? 5 : 1;
     // let maxWaitTime =  waitTime *browserLazy || 10000 * browserLazy;
-    let maxWaitTime = waitTime || 7000;
+    let maxWaitTime = waitTime || 15000;
     try{
         let target = await this.driver.wait(until.elementLocated(By.id(selector)),maxWaitTime);
         return await target;
@@ -1217,7 +1217,6 @@ topqa.prototype.topButtonClick = async function(_id,_dblClick){
         // let topElement = this.driver.findElement(By.id(id));
         let targetElement = await topElement.findElement(By.css('.top-button-root'));
         
-        
         if(!!dblClick){
             console.warn('Button DblCLick ');
             await this.driver.actions({bridge:true}).doubleClick(targetElement).perform();
@@ -1232,7 +1231,8 @@ topqa.prototype.topButtonClick = async function(_id,_dblClick){
         this.driver.sleep(500);
 
     }
-    catch(err){console.error(err);}
+    catch(err){console.error(err);
+            console.log('Error Id ', _id);}
 }
 topqa.prototype.topButtonDblClick = async function(_id){
     try{
